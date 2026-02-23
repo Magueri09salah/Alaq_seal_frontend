@@ -61,6 +61,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Login with Google - redirect to backend OAuth
+   */
+  const loginWithGoogle = () => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://104.248.39.250/api/v1';
+    window.location.href = `${apiUrl}/auth/google/redirect`;
+  };
+
+  /**
+   * Set user from Google OAuth callback
+   */
+  const setUserFromGoogle = (userData) => {
+    setUser(userData);
+  };
+
+  /**
    * Logout
    */
   const logout = async () => {
@@ -80,6 +95,8 @@ export const AuthProvider = ({ children }) => {
     loading,
     register,
     login,
+    loginWithGoogle,
+    setUserFromGoogle,
     logout,
   };
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import GoogleButton from '../components/auth/GoogleButton';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -34,13 +35,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 flex items-center justify-center p-4">
-
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Fixed background image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
         style={{ backgroundImage: 'url(/background.jpeg)' }}
-      >
-      </div>
+      />
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
@@ -48,17 +48,31 @@ export default function LoginPage() {
           <Link to="/">
             <div className="inline-flex items-center justify-center mb-4">
               <img 
-              src="/alaq_seal_logo.png" 
-              alt="Alaq Seal" 
-              className="h-24 w-auto object-contain"
-            />
+                src="/alaq_seal_logo.png" 
+                alt="Alaq Seal" 
+                className="h-12 w-auto object-contain"
+              />
             </div>
           </Link>
+          <h1 className="font-display text-3xl font-bold text-neutral-900 mb-2">Connexion</h1>
           <p className="text-neutral-600 font-body">Accédez à votre espace AlaqSeal</p>
         </div>
 
         {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-neutral-200">
+          {/* Google Button */}
+          <GoogleButton />
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-neutral-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-neutral-500 font-body">OU</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>

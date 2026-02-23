@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Pages
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import GoogleCallbackPage from './pages/Googlecallbackpage';
 import DashboardPage from './pages/DashboardPage';
 import EstimatorWizard from './pages/EstimatorWizard';
 import DevisViewPage from './pages/DevisViewPage';
@@ -63,6 +64,9 @@ function AppRoutes() {
           </AuthRoute>
         }
       />
+
+      {/* Google OAuth Callback - Public (no auth check) */}
+      <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
       {/* Protected Routes */}
       <Route
