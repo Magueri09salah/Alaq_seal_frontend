@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import GoogleButton from '../components/auth/GoogleButton';
+import GoogleButton from '../components/auth/Googlebutton';
 
 export default function LoginPage() {
   const navigate = useNavigate();
