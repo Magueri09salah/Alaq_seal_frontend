@@ -194,11 +194,6 @@ export default function DevisViewPage() {
               <div className="bg-white border border-neutral-200 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-heading font-bold text-lg text-neutral-900">Liste des produits — ordre DTU</h2>
-                  {devis.product?.norme && (
-                    <span className="px-3 py-1 bg-neutral-100 text-neutral-600 text-xs font-heading font-semibold rounded-full">
-                      {devis.product.norme}
-                    </span>
-                  )}
                 </div>
                 <div className="space-y-2">
                   {devis.calculated_materials.map((mat, i) => (

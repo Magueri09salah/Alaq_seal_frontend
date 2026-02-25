@@ -68,6 +68,13 @@ const MATERIAL_TYPE_COLORS = {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function EstimatorWizard() {
   const navigate = useNavigate();
+   // Selections
+  const [selService, setSelService]   = useState(null);
+  const [selSubtype, setSelSubtype]   = useState(null);
+  const [selProduct, setSelProduct]   = useState(null);
+  const [selCase, setSelCase]         = useState(null);
+  const [calculation, setCalculation] = useState(null);
+  const [removedMaterials, setRemovedMaterials] = useState(new Set());
 
   // UI state
   const [currentStep, setCurrentStep] = useState(1);
@@ -78,12 +85,6 @@ export default function EstimatorWizard() {
   const [products, setProducts]             = useState([]);
   // const [pricingFactors, setPricingFactors] = useState({});
 
-  // Selections
-  const [selService, setSelService]   = useState(null);
-  const [selSubtype, setSelSubtype]   = useState(null);
-  const [selProduct, setSelProduct]   = useState(null);
-  const [selCase, setSelCase]         = useState(null);
-  const [calculation, setCalculation] = useState(null);
 
   // Dimensions form
   const [dims, setDims] = useState({ longueur: '', largeur: '', hauteur: '', nombre_murs: 4 });
@@ -170,27 +171,28 @@ export default function EstimatorWizard() {
   };
 
   const handleCalculate = async (e) => {
-    e.preventDefault();
-    if (!dims.longueur || !dims.largeur) { toast.error('Renseignez les dimensions'); return; }
-    try {
-      setLoading(true);
-      const r = await estimatorAPI.calculateDevis({
-        product_id:      selProduct.id,
-        product_case_id: selCase.id,
-        longueur:    parseFloat(dims.longueur),
-        largeur:     parseFloat(dims.largeur),
-        hauteur:     parseFloat(dims.hauteur) || 0,
-        nombre_murs: parseInt(dims.nombre_murs) || 4,
-        factor_height:     factors.height,
-        factor_condition:  factors.condition,
-        factor_complexity: factors.complexity,
-        factor_region:     factors.region,
-      });
-      setCalculation(r.data.data);
-      setCurrentStep(needsSubtype ? 6 : 5);
-    } catch { toast.error('Erreur lors du calcul'); }
-    finally { setLoading(false); }
-  };
+  e.preventDefault();
+  if (!dims.longueur || !dims.largeur) { toast.error('Renseignez les dimensions'); return; }
+  try {
+    setLoading(true);
+    const r = await estimatorAPI.calculateDevis({
+      product_id:      selProduct.id,
+      product_case_id: selCase.id,
+      longueur:    parseFloat(dims.longueur),
+      largeur:     parseFloat(dims.largeur),
+      hauteur:     parseFloat(dims.hauteur) || 0,
+      nombre_murs: parseInt(dims.nombre_murs) || 4,
+      factor_height:     factors.height,
+      factor_condition:  factors.condition,
+      factor_complexity: factors.complexity,
+      factor_region:     factors.region,
+    });
+    setCalculation(r.data.data);
+    setRemovedMaterials(new Set()); // ← ADD THIS LINE (reset removed materials)
+    setCurrentStep(needsSubtype ? 6 : 5);
+  } catch { toast.error('Erreur lors du calcul'); }
+  finally { setLoading(false); }
+};
 
   const handleSave = async (status) => {
     try {
@@ -608,100 +610,134 @@ export default function EstimatorWizard() {
                   </div>
                 </div>
 
-                {/* Materials list (DTU) */}
-                {calculation.calculated_materials?.length > 0 && (
-                  <div className="bg-white border border-neutral-200 rounded-2xl p-6">
-                    <h2 className="font-heading text-lg font-bold text-neutral-900 mb-4">Liste des produits — ordre DTU</h2>
-                    <div className="space-y-3">
-                      {calculation.calculated_materials.map((mat, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl">
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-heading font-bold flex-shrink-0">{mat.step}</span>
-                            <div>
-                              <span className="font-body text-neutral-900 text-sm">{mat.name}</span>
-                              {mat.is_optional && <span className="ml-2 text-xs text-neutral-400">(optionnel)</span>}
-                              <span className={`ml-2 text-xs px-2 py-0.5 rounded font-body ${MATERIAL_TYPE_COLORS[mat.type] || 'bg-neutral-100 text-neutral-600'}`}>
-                                {mat.type}
+                {/* Materials list (DTU) with REMOVE functionality */}
+                {(() => {
+                  // Filter out removed materials
+                  const activeMaterials = calculation.calculated_materials?.filter((_, idx) => !removedMaterials.has(idx)) || [];
+                  
+                  // Proportional price adjustment
+                  const materialRatio = activeMaterials.length / (calculation.calculated_materials?.length || 1);
+                  const adjustedBasePrice = calculation.base_price * materialRatio;
+                  const adjustedSubtotal = adjustedBasePrice + (calculation.fixed_costs || 0);
+                  const adjustedTVA = adjustedSubtotal * (calculation.tva_rate / 100);
+
+                  const handleRemoveMaterial = (index) => {
+                    const newRemoved = new Set(removedMaterials);
+                    newRemoved.add(index);
+                    setRemovedMaterials(newRemoved);
+                  };
+
+                  return (
+                    <>
+                      {activeMaterials.length > 0 && (
+                        <div className="bg-white border border-neutral-200 rounded-2xl p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h2 className="font-heading text-lg font-bold text-neutral-900">Liste des produits — ordre DTU</h2>
+                            {removedMaterials.size > 0 && (
+                              <span className="text-xs text-neutral-500 font-body">
+                                {removedMaterials.size} produit{removedMaterials.size > 1 ? 's' : ''} retiré{removedMaterials.size > 1 ? 's' : ''}
                               </span>
-                            </div>
+                            )}
                           </div>
-                          <span className="font-heading font-bold text-primary-500 text-sm">{mat.quantity} {mat.unit}</span>
+                          <div className="space-y-3">
+                            {calculation.calculated_materials?.map((mat, i) => {
+                              if (removedMaterials.has(i)) return null;
+                              
+                              return (
+                                <div key={i} className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl group hover:bg-neutral-100 transition-colors">
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <span className="w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-heading font-bold flex-shrink-0">
+                                      {mat.step}
+                                    </span>
+                                    <div className="flex-1">
+                                      <span className="font-body text-neutral-900 text-sm">{mat.name}</span>
+                                      {mat.is_optional && <span className="ml-2 text-xs text-neutral-400">(optionnel)</span>}
+                                      <span className={`ml-2 text-xs px-2 py-0.5 rounded font-body ${MATERIAL_TYPE_COLORS[mat.type] || 'bg-neutral-100 text-neutral-600'}`}>
+                                        {mat.type}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-heading font-bold text-primary-500 text-sm">
+                                      {mat.quantity} {mat.unit}
+                                    </span>
+                                    {/* Remove button */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveMaterial(i)}
+                                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-100 text-neutral-400 hover:text-red-600 transition-all"
+                                      title="Retirer ce produit">
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      )}
 
-                {/* Price breakdown */}
-                <div className="bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-2xl p-6">
-                  <h2 className="font-heading text-xl font-bold mb-6">Calcul du prix</h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between pb-3 border-b border-primary-400">
-                      <span className="font-body">Prix de base ({calculation.surface_area} m²)</span>
-                      <span className="font-display font-bold">{fmt(calculation.base_price)}</span>
-                    </div>
-                    {/* <div className="text-sm space-y-1.5 text-primary-100">
-                      <p className="text-white font-heading font-semibold">Coefficients :</p>
-                      {[['Hauteur', calculation.factor_height], ['État', calculation.factor_condition], ['Complexité', calculation.factor_complexity], ['Région', calculation.factor_region]].map(([l, v]) => (
-                        <div key={l} className="flex justify-between"><span className="font-body">× {l}</span><span>×{v}</span></div>
-                      ))}
-                    </div> */}
-                    {/* <div className="flex justify-between pt-2 border-t border-primary-400">
-                      <span className="font-body">Avec coefficients</span>
-                      <span className="font-display font-bold">{fmt(calculation.price_with_factors)}</span>
-                    </div> */}
-                    <div className="flex justify-between text-sm">
-                      <span className="font-body">+ Coûts fixes</span>
-                      <span>{fmt(calculation.fixed_costs)}</span>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t border-primary-400">
-                      <span className="font-body font-semibold">Sous-total HT</span>
-                      <span className="font-display font-bold">{fmt(calculation.subtotal_ht)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="font-body">TVA ({calculation.tva_rate}%)</span>
-                      <span>{fmt(calculation.tva_amount)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 border-t-2 border-white text-xl">
-                      <span className="font-heading font-bold">TOTAL TTC</span>
-                      <span className="font-display font-bold">{fmt(calculation.total_ttc)}</span>
-                    </div>
-                  </div>
-                </div>
+                      {/* Price breakdown with adjusted prices */}
+                      <div className="bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-2xl p-6">
+                        <h2 className="font-heading text-xl font-bold mb-6">Calcul du prix</h2>
+                        <div className="space-y-3">
+                          <div className="flex justify-between pb-3 border-b border-primary-400">
+                            <span className="font-body">Prix de base ({calculation.surface_area} m²)</span>
+                            <span className="font-display font-bold">{fmt(adjustedBasePrice)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="font-body">+ Coûts fixes</span>
+                            <span>{fmt(calculation.fixed_costs || 0)}</span>
+                          </div>
+                          <div className="flex justify-between pt-2 border-t border-primary-400">
+                            <span className="font-body font-semibold">Sous-total HT</span>
+                            <span className="font-display font-bold">{fmt(adjustedSubtotal)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="font-body">TVA ({calculation.tva_rate}%)</span>
+                            <span>{fmt(adjustedTVA)}</span>
+                          </div>
+                        </div>
+                      </div>
 
-                {/* Duration */}
-                {calculation.estimated_days > 0 && (
-                  <div className="bg-white border border-neutral-200 rounded-2xl p-5 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-500 font-body">Durée estimée des travaux</p>
-                      <p className="font-display font-bold text-2xl text-neutral-900">{calculation.estimated_days} jours</p>
-                      <p className="text-xs text-neutral-400 font-body">{calculation.preparation_days}j préparation + {calculation.drying_days}j séchage</p>
-                    </div>
-                  </div>
-                )}
+                      {/* Duration */}
+                      {calculation.estimated_days > 0 && (
+                        <div className="bg-white border border-neutral-200 rounded-2xl p-5 flex items-center gap-4">
+                          <div className="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <svg className="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-xs text-neutral-500 font-body">Durée estimée des travaux</p>
+                            <p className="font-display font-bold text-2xl text-neutral-900">{calculation.estimated_days} jours</p>
+                            <p className="text-xs text-neutral-400 font-body">{calculation.preparation_days}j préparation + {calculation.drying_days}j séchage</p>
+                          </div>
+                        </div>
+                      )}
 
-                {/* Save buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button onClick={() => handleSave('draft')} disabled={loading}
-                    className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-heading font-semibold rounded-lg transition-all disabled:opacity-50">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-                    </svg>
-                    Sauvegarder comme brouillon
-                  </button>
-                  <button onClick={() => handleSave('saved')} disabled={loading}
-                    className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-                    </svg>
-                    Sauvegarder le devis
-                  </button>
-                </div>
+                      {/* Save buttons */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button onClick={() => handleSave('draft')} disabled={loading}
+                          className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-heading font-semibold rounded-lg transition-all disabled:opacity-50">
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                          </svg>
+                          Sauvegarder comme brouillon
+                        </button>
+                        <button onClick={() => handleSave('saved')} disabled={loading}
+                          className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md">
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                          </svg>
+                          Sauvegarder le devis
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
 
