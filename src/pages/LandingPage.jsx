@@ -11,10 +11,10 @@ const LandingPage = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16 lg:py-24">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-primary-100 rounded-full text-primary-700 text-sm font-semibold mb-6">
+            {/* <div className="inline-flex items-center px-4 py-2 bg-primary-100 rounded-full text-primary-700 text-sm font-semibold mb-6">
               <span className="w-2 h-2 bg-primary-500 rounded-full mr-2 animate-pulse"></span>
               Plateforme self-service professionnelle
-            </div>
+            </div> */}
 
             {/* Main Heading */}
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-neutral-900 mb-6 leading-tight">
@@ -23,10 +23,10 @@ const LandingPage = () => {
               <span className="text-primary-500">en quelques clics</span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-neutral-600 mb-8 max-w-2xl mx-auto font-body leading-relaxed">
+            {/* <p className="text-lg sm:text-xl text-neutral-600 mb-8 max-w-2xl mx-auto font-body leading-relaxed">
               Estimez vos projets d'étanchéité et façades instantanément. 
               Téléchargez un devis professionnel sans attendre.
-            </p>
+            </p> */}
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -69,12 +69,12 @@ const LandingPage = () => {
         </div>
 
         {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-primary-200 rounded-full blur-3xl opacity-20"></div>
-        <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-accent-200 rounded-full blur-3xl opacity-20"></div>
+        {/* <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-primary-200 rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-accent-200 rounded-full blur-3xl opacity-20"></div> */}
       </section>
 
       {/* Features Grid */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-neutral-50">
+      {/* <section className="py-12 sm:py-16 lg:py-20 bg-neutral-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-16">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
             {[
@@ -124,10 +124,10 @@ const LandingPage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Services Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+      {/* <section className="py-12 sm:py-16 lg:py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-16">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-neutral-900 mb-4">
@@ -167,10 +167,10 @@ const LandingPage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* How It Works */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+      {/* <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-primary-500 to-primary-600 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-16">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl mb-4">
@@ -213,10 +213,10 @@ const LandingPage = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+      {/* <section className="py-12 sm:py-16 lg:py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-16">
           <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-neutral-50 to-primary-50 rounded-3xl p-8 lg:p-12 border-2 border-primary-100">
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl text-neutral-900 mb-6">
@@ -233,10 +233,10 @@ const LandingPage = () => {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
-      <footer className="bg-neutral-900 text-white py-12">
+      {/* <footer className="bg-neutral-900 text-white py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-16">
           <div className="text-center">
             <img 
@@ -261,7 +261,7 @@ const LandingPage = () => {
             </p>
           </div>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 };

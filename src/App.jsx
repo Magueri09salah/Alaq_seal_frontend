@@ -78,7 +78,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/estimator/new"
+        path="/estimateur/new"
         element={
           <ProtectedRoute>
             <EstimatorWizard />

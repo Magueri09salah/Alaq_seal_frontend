@@ -240,7 +240,7 @@ export default function DevisViewPage() {
                   <span className="font-body">Prix de base ({devis.surface_area} m²)</span>
                   <span className="font-display font-bold">{fmt(devis.base_price)}</span>
                 </div>
-                <div className="text-sm space-y-1.5 text-primary-100">
+                {/* <div className="text-sm space-y-1.5 text-primary-100">
                   <p className="text-white font-heading font-semibold">Coefficients appliqués :</p>
                   {[
                     ['Hauteur',     devis.factor_height],
@@ -253,15 +253,15 @@ export default function DevisViewPage() {
                       <span className={parseFloat(v) === 1 ? 'text-primary-200' : 'text-white font-semibold'}>×{v}</span>
                     </div>
                   ))}
-                </div>
-                <div className="flex justify-between pt-2 border-t border-primary-400">
+                </div> */}
+                {/* <div className="flex justify-between pt-2 border-t border-primary-400">
                   <span className="font-body">Avec coefficients</span>
                   <span className="font-display font-bold">{fmt(devis.price_with_factors)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
+                </div> */}
+                {/* <div className="flex justify-between text-sm">
                   <span className="font-body">+ Coûts fixes</span>
                   <span>{fmt(devis.fixed_costs)}</span>
-                </div>
+                </div> */}
                 <div className="flex justify-between pt-2 border-t border-primary-400">
                   <span className="font-body font-semibold">Sous-total HT</span>
                   <span className="font-display font-bold">{fmt(devis.subtotal_ht)}</span>

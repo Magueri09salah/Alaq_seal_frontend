@@ -76,7 +76,7 @@ export default function EstimatorWizard() {
   // API data
   const [services, setServices]             = useState([]);
   const [products, setProducts]             = useState([]);
-  const [pricingFactors, setPricingFactors] = useState({});
+  // const [pricingFactors, setPricingFactors] = useState({});
 
   // Selections
   const [selService, setSelService]   = useState(null);
@@ -116,7 +116,7 @@ export default function EstimatorWizard() {
   const isDetails   = (currentStep === 4 && !needsSubtype) || (currentStep === 5 && needsSubtype);
   const isSummary   = (currentStep === 5 && !needsSubtype) || (currentStep === 6 && needsSubtype);
 
-  useEffect(() => { fetchServices(); fetchPricingFactors(); }, []);
+  useEffect(() => { fetchServices() }, []);
 
   // Load products when step changes to product step
   useEffect(() => {
@@ -130,10 +130,10 @@ export default function EstimatorWizard() {
     catch { toast.error('Erreur chargement services'); }
   };
 
-  const fetchPricingFactors = async () => {
-    try { const r = await estimatorAPI.getPricingFactors(); setPricingFactors(r.data.data); }
-    catch {}
-  };
+  // const fetchPricingFactors = async () => {
+  //   try { const r = await estimatorAPI.getPricingFactors(); setPricingFactors(r.data.data); }
+  //   catch {}
+  // };
 
   const fetchProducts = async (serviceId, subcategory = null) => {
     try {
@@ -282,7 +282,7 @@ export default function EstimatorWizard() {
                         </svg>
                       </div>
                       <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">{svc.name}</h3>
-                      <p className="text-sm text-neutral-600 font-body">{svc.description}</p>
+                      {/* <p className="text-sm text-neutral-600 font-body">{svc.description}</p> */}
                     </button>
                   ))}
                 </div>
@@ -309,7 +309,9 @@ export default function EstimatorWizard() {
                 <p className="text-neutral-600 font-body mb-8">
                   {selService.code === 'facade' ? 'Choisissez la collection pour votre projet' : 'Précisez le type de support à traiter'}
                 </p>
-                <div className={`grid gap-4 mb-8 ${selService.code === 'etancheite' ? 'grid-cols-1 sm:grid-cols-2 max-w-md mx-auto' : 'grid-cols-2 lg:grid-cols-4'}`}>
+
+                {/* Responsive Grid: 1 col mobile, 2 col tablet, flex/3 col large */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                   {SUBTYPES[selService.code].map(sub => (
                     <button
                       key={sub.key}
@@ -380,21 +382,21 @@ export default function EstimatorWizard() {
                           <div className="flex items-start justify-between mb-3">
                             <h3 className="font-heading font-bold text-lg text-neutral-900 pr-2">{prod.name}</h3>
                             <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                              <span className={`px-2.5 py-0.5 text-xs font-heading font-semibold rounded-lg ${prod.category === 'premium' ? 'bg-accent-100 text-accent-700' : prod.category === 'standard' ? 'bg-primary-100 text-primary-700' : 'bg-neutral-100 text-neutral-700'}`}>{prod.category}</span>
-                              {prod.norme && <span className="text-xs text-neutral-400 font-body">{prod.norme}</span>}
+                              {/* <span className={`px-2.5 py-0.5 text-xs font-heading font-semibold rounded-lg ${prod.category === 'premium' ? 'bg-accent-100 text-accent-700' : prod.category === 'standard' ? 'bg-primary-100 text-primary-700' : 'bg-neutral-100 text-neutral-700'}`}>{prod.category}</span> */}
+                              {/* {prod.norme && <span className="text-xs text-neutral-400 font-body">{prod.norme}</span>} */}
                             </div>
                           </div>
-                          <p className="text-sm text-neutral-600 font-body mb-4 line-clamp-2">{prod.description}</p>
+                          {/* <p className="text-sm text-neutral-600 font-body mb-4 line-clamp-2">{prod.description}</p> */}
                           <div className="flex items-center justify-between text-sm border-t border-neutral-100 pt-3">
                             <span className="text-neutral-500 font-body">Prix / m²</span>
                             <span className="font-heading font-bold text-primary-500">{fmt(prod.price_min)} – {fmt(prod.price_max)}</span>
                           </div>
                           {prod.warranty_years && (
                             <div className="mt-2 flex items-center text-xs text-neutral-500 font-body">
-                              <svg className="w-3.5 h-3.5 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              {/* <svg className="w-3.5 h-3.5 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                              </svg>
-                              Garantie {prod.warranty_years} ans
+                              </svg> */}
+                              {/* Garantie {prod.warranty_years} ans */}
                             </div>
                           )}
                         </button>
@@ -429,7 +431,7 @@ export default function EstimatorWizard() {
                 <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Cas d'application</h2>
                 <p className="text-neutral-600 font-body mb-2">
                   {selProduct.name}
-                  {selProduct.norme && <span className="ml-2 text-xs text-neutral-400">({selProduct.norme})</span>}
+                  {/* {selProduct.norme && <span className="ml-2 text-xs text-neutral-400">({selProduct.norme})</span>} */}
                 </p>
                 <p className="text-sm text-neutral-500 font-body mb-8">Sélectionnez le cas qui correspond à votre chantier</p>
 
@@ -555,27 +557,6 @@ export default function EstimatorWizard() {
                     )}
                   </div>
 
-                  {/* Pricing Factors */}
-                  <div>
-                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Coefficients de calcul</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        { key: 'height',     label: 'Hauteur du bâtiment', field: 'height' },
-                        { key: 'condition',  label: 'État du support',     field: 'condition' },
-                        { key: 'complexity', label: 'Complexité',          field: 'complexity' },
-                        { key: 'region',     label: 'Région',              field: 'region' },
-                      ].map(({ key, label, field }) => pricingFactors[key] && (
-                        <div key={key}>
-                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">{label}</label>
-                          <select value={factors[field]} onChange={e => setFactors({...factors, [field]: parseFloat(e.target.value)})}
-                            className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
-                            {pricingFactors[key].map(f => <option key={f.code} value={f.multiplier}>{f.name} (×{f.multiplier})</option>)}
-                          </select>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Notes */}
                   <div>
                     <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Notes <span className="text-neutral-400 font-body font-normal">(optionnel)</span></label>
@@ -659,16 +640,16 @@ export default function EstimatorWizard() {
                       <span className="font-body">Prix de base ({calculation.surface_area} m²)</span>
                       <span className="font-display font-bold">{fmt(calculation.base_price)}</span>
                     </div>
-                    <div className="text-sm space-y-1.5 text-primary-100">
+                    {/* <div className="text-sm space-y-1.5 text-primary-100">
                       <p className="text-white font-heading font-semibold">Coefficients :</p>
                       {[['Hauteur', calculation.factor_height], ['État', calculation.factor_condition], ['Complexité', calculation.factor_complexity], ['Région', calculation.factor_region]].map(([l, v]) => (
                         <div key={l} className="flex justify-between"><span className="font-body">× {l}</span><span>×{v}</span></div>
                       ))}
-                    </div>
-                    <div className="flex justify-between pt-2 border-t border-primary-400">
+                    </div> */}
+                    {/* <div className="flex justify-between pt-2 border-t border-primary-400">
                       <span className="font-body">Avec coefficients</span>
                       <span className="font-display font-bold">{fmt(calculation.price_with_factors)}</span>
-                    </div>
+                    </div> */}
                     <div className="flex justify-between text-sm">
                       <span className="font-body">+ Coûts fixes</span>
                       <span>{fmt(calculation.fixed_costs)}</span>
