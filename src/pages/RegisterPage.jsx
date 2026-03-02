@@ -4,10 +4,57 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import GoogleButton from '../components/auth/Googlebutton';
 
+// Password strength indicator component
+const PasswordStrengthIndicator = ({ password }) => {
+  const checks = [
+    { label: 'Au moins 8 caractères', valid: password.length >= 8 },
+    { label: 'Une lettre majuscule', valid: /[A-Z]/.test(password) },
+    { label: 'Une lettre minuscule', valid: /[a-z]/.test(password) },
+    { label: 'Un chiffre', valid: /[0-9]/.test(password) },
+    { label: 'Un caractère spécial (!@#$%...)', valid: /[!@#$%^&*(),.?":{}|<>+-/=]/.test(password) },
+  ];
+
+  if (!password) return null;
+
+  const validCount = checks.filter(c => c.valid).length;
+  const strength = validCount === 5 ? 'Fort' : validCount >= 3 ? 'Moyen' : 'Faible';
+  const strengthColor = validCount === 5 ? 'text-green-600' : validCount >= 3 ? 'text-yellow-600' : 'text-red-600';
+
+  return (
+    <div className="mt-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-medium text-neutral-600">Force du mot de passe:</p>
+        <span className={`text-xs font-bold ${strengthColor}`}>{strength}</span>
+      </div>
+      <ul className="space-y-1">
+        {checks.map((check, index) => (
+          <li key={index} className="flex items-center gap-2 text-xs">
+            {check.valid ? (
+              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            <span className={check.valid ? 'text-green-600' : 'text-neutral-500'}>
+              {check.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [showStrength, setShowStrength] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -15,6 +62,26 @@ export default function RegisterPage() {
     password: '',
     password_confirmation: '',
   });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'password') {
+      setShowStrength(value.length > 0);
+    }
+  };
+
+  // Validation
+  const validatePassword = (password) => {
+    const errors = [];
+    if (password.length < 8) errors.push('au moins 8 caractères');
+    if (!/[A-Z]/.test(password)) errors.push('une lettre majuscule');
+    if (!/[a-z]/.test(password)) errors.push('une lettre minuscule');
+    if (!/[0-9]/.test(password)) errors.push('un chiffre');
+    if (!/[!@#$%^&*(),.?":{}|<>+-/=]/.test(password)) errors.push('un caractère spécial');
+    return errors;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,13 +92,27 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.password !== formData.password_confirmation) {
-      toast.error('Les mots de passe ne correspondent pas');
+    // Email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error('Veuillez entrer une adresse email valide');
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error('Le mot de passe doit contenir au moins 6 caractères');
+    // Phone validation
+    if (!/^[\d\s+()-]{8,20}$/.test(formData.phone)) {
+      toast.error('Numéro de téléphone invalide');
+      return;
+    }
+
+    // Password validation
+    const passwordErrors = validatePassword(formData.password);
+    if (passwordErrors.length > 0) {
+      toast.error(`Le mot de passe doit contenir ${passwordErrors.join(', ')}`);
+      return;
+    }
+
+    if (formData.password !== formData.password_confirmation) {
+      toast.error('Les mots de passe ne correspondent pas');
       return;
     }
 
@@ -92,14 +173,15 @@ export default function RegisterPage() {
             {/* Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-heading font-medium text-neutral-700 mb-2">
-                Nom complet
+                Nom complet <span className="text-red-500">*</span>
               </label>
               <input
                 id="name"
+                name="name"
                 type="text"
                 required
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 placeholder="Jean Dupont"
               />
@@ -108,14 +190,15 @@ export default function RegisterPage() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-heading font-medium text-neutral-700 mb-2">
-                Email
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 placeholder="votre@email.com"
               />
@@ -124,50 +207,89 @@ export default function RegisterPage() {
             {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-sm font-heading font-medium text-neutral-700 mb-2">
-                Téléphone
+                Téléphone <span className="text-red-500">*</span>
               </label>
               <input
                 id="phone"
+                name="phone"
                 type="tel"
                 required
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 placeholder="06 12 34 56 78"
               />
             </div>
 
-            {/* Password */}
+            {/* Password with toggle */}
             <div>
               <label htmlFor="password" className="block text-sm font-heading font-medium text-neutral-700 mb-2">
-                Mot de passe
+                Mot de passe <span className="text-red-500">*</span>
               </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                placeholder="••••••••"
-              />
-              <p className="text-xs text-neutral-500 font-body mt-1">Minimum 6 caractères</p>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {showStrength && <PasswordStrengthIndicator password={formData.password} />}
             </div>
 
-            {/* Password Confirmation */}
+            {/* Password Confirmation with toggle */}
             <div>
               <label htmlFor="password_confirmation" className="block text-sm font-heading font-medium text-neutral-700 mb-2">
-                Confirmer le mot de passe
+                Confirmer le mot de passe <span className="text-red-500">*</span>
               </label>
-              <input
-                id="password_confirmation"
-                type="password"
-                required
-                value={formData.password_confirmation}
-                onChange={(e) => setFormData({ ...formData, password_confirmation: e.target.value })}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  id="password_confirmation"
+                  name="password_confirmation"
+                  type={showPasswordConfirm ? 'text' : 'password'}
+                  required
+                  value={formData.password_confirmation}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
+                >
+                  {showPasswordConfirm ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Submit Button */}
