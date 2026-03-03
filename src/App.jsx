@@ -10,6 +10,8 @@ import GoogleCallbackPage from './pages/Googlecallbackpage';
 import DashboardPage from './pages/DashboardPage';
 import EstimatorWizard from './pages/EstimatorWizard';
 import DevisViewPage from './pages/DevisViewPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -64,6 +66,9 @@ function AppRoutes() {
           </AuthRoute>
         }
       />
+
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Google OAuth Callback - Public (no auth check) */}
       <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
