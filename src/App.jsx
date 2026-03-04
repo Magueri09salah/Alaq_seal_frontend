@@ -12,6 +12,7 @@ import EstimatorWizard from './pages/EstimatorWizard';
 import DevisViewPage from './pages/DevisViewPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import ToitureDevisViewPage from './pages/ToitureDevisViewPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -82,6 +83,16 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* NEW DEVIS WIZARD - Both routes point to same wizard */}
+      <Route
+        path="/new-devis"
+        element={
+          <ProtectedRoute>
+            <EstimatorWizard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/estimateur/new"
         element={
@@ -90,11 +101,23 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* OLD SYSTEM - View Devis */}
       <Route
         path="/devis/:id"
         element={
           <ProtectedRoute>
             <DevisViewPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* NEW SYSTEM - View Toiture Devis */}
+      <Route
+        path="/toiture/devis/:id"
+        element={
+          <ProtectedRoute>
+            <ToitureDevisViewPage />
           </ProtectedRoute>
         }
       />

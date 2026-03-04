@@ -45,7 +45,7 @@ export default function DevisViewPage() {
       setLoading(true);
       const r = await devisAPI.show(id);
       setDevis(r.data.data);
-    } catch { toast.error('Devis introuvable'); navigate('/dashboard'); }
+    } catch { toast.error('Devis introuvable 2'); navigate('/dashboard'); }
     finally { setLoading(false); }
   };
 

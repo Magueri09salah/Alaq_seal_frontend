@@ -63,6 +63,62 @@ export const estimatorAPI = {
    * Create and save
    */
   createDevis: (data) => api.post('/devis', data),
+  
+  /**
+   * Calculate toiture devis (preview only - doesn't save)
+   * @param {Object} data - Calculation data
+   * @returns {Promise}
+   */
+  calculateToiture: (data) => api.post('/toiture/calculate', data),
+  
+  /**
+   * Create new toiture devis
+   * @param {Object} data - Devis data
+   * @returns {Promise}
+   */
+  createToitureDevis: (data) => api.post('/toiture/devis', data),
+  
+  /**
+   * List toiture devis with optional filters
+   * @param {Object} params - Query parameters (status, type, per_page, page)
+   * @returns {Promise}
+   */
+  listToitureDevis: (params = {}) => api.get('/toiture/devis', { params }),
+  
+  /**
+   * Get single toiture devis by ID
+   * @param {number} id - Devis ID
+   * @returns {Promise}
+   */
+  getToitureDevis: (id) => api.get(`/toiture/devis/${id}`),
+  
+  /**
+   * Submit toiture devis to AlaqSeal
+   * @param {number} id - Devis ID
+   * @returns {Promise}
+   */
+  submitToitureDevis: (id) => api.post(`/toiture/devis/${id}/submit`),
+  
+  /**
+   * Delete toiture devis
+   * @param {number} id - Devis ID
+   * @returns {Promise}
+   */
+  deleteToitureDevis: (id) => api.delete(`/toiture/devis/${id}`),
+  
+  /**
+   * Get toiture statistics
+   * @returns {Promise}
+   */
+  getToitureStats: () => api.get('/toiture/stats'),
+  
+  /**
+   * Download toiture devis PDF
+   * Note: This is handled manually in components with fetch() to handle blob response
+   * @param {number} id - Devis ID
+   * @returns {string} - URL for download
+   */
+  getToiturePdfUrl: (id) => `${import.meta.env.VITE_API_URL}/toiture/devis/${id}/download-pdf`,
 };
 
 // ── Devis ─────────────────────────────────────────────────────────────────────

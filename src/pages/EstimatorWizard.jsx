@@ -5,162 +5,114 @@ import toast from 'react-hot-toast';
 import Navbar from '../components/layout/Navbar';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const SERVICES_WITH_SUBTYPES = ['facade', 'etancheite'];
 
-const SUBTYPES = {
-  facade: [
-    { key: 'graphique', label: 'Graphique',  description: 'Motifs et designs contemporains' },
-    { key: 'minerale',  label: 'Minérale',   description: 'Pierres, granits et ardoises naturelles' },
-    { key: 'organique', label: 'Organique',  description: 'Textures naturelles et matières vivantes' },
-    { key: 'urbaine',   label: 'Urbaine',    description: 'Style contemporain pour milieux urbains' },
-  ],
-  etancheite: [
-    { key: 'mur', label: 'Mur', description: "Cuvelage, SEL mur salle d'eau, murs enterrés" },
-    { key: 'sol', label: 'Sol', description: "SEL sol salle d'eau, sous carrelage" },
-    { key: 'toiture', label: 'Toiture Terrasse', description: "Toitures plates, terrasses accessibles" },
-  ],
-};
+// Main étanchéité types (first page)
+const ETANCHEITE_TYPES = [
+  { 
+    key: 'toiture', 
+    label: 'Étanchéité toiture plate', 
+    description: 'Toitures-terrasses accessibles ou non accessibles',
+    icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
+  },
+  { 
+    key: 'mur', 
+    label: 'Étanchéité mur enterré', 
+    description: 'Cuvelage, murs enterrés, soubassements',
+    icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5'
+  },
+  { 
+    key: 'salle_bain', 
+    label: 'Étanchéité sous carrelage', 
+    description: 'Salles de bain, douches, pièces humides',
+    icon: 'M4 6h16M4 10h16M4 14h16M4 18h16'
+  },
+];
 
-const CASE_ICONS = {
-  check:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
-  warning: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
-  water:   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
-  layers:  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />,
-  sun:     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />,
-};
+// Toiture types (page 2 for toiture)
+const TOITURE_TYPES = [
+  { key: 'non_accessible', label: 'Non accessible', description: 'Toiture technique non accessible' },
+  { key: 'accessible', label: 'Accessible', description: 'Toiture-terrasse accessible aux piétons' },
+];
 
-const SERVICE_ICON_PATHS = {
-  facade:             "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
-  etancheite:         "M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z",
-  resine_sol:         "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z",
-  etancheite_toiture: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-  coffrage:           "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
-};
-
-const SUBTYPE_ICON_PATHS = {
-  graphique: "M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01",
-  minerale:  "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7",
-  organique: "M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z",
-  urbaine:   "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z",
-  mur:       "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5",
-  sol:       "M4 6h16M4 10h16M4 14h16M4 18h16",
-  toiture:   "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-};
+// Toiture finish options (for non-accessible only)
+const TOITURE_FINITIONS = [
+  { key: 'autoprotegee', label: 'Autoprotégée ardoisée', description: 'Finition directe ardoisée' },
+  { key: 'lestage', label: 'Finition lisse + Lestage', description: 'Géotextile + Gravier 5cm' },
+];
 
 const fmt = (p) => new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 0 }).format(p);
-
-const MATERIAL_TYPE_COLORS = {
-  barbotine:  'bg-orange-100 text-orange-700',
-  mortier:    'bg-stone-100  text-stone-700',
-  primaire:   'bg-yellow-100 text-yellow-700',
-  resine:     'bg-blue-100   text-blue-700',
-  bande:      'bg-purple-100 text-purple-700',
-  membrane:   'bg-indigo-100 text-indigo-700',
-  isolation:  'bg-green-100  text-green-700',
-  pare_vapeur:'bg-cyan-100   text-cyan-700',
-  gravillon:  'bg-gray-100   text-gray-700',
-  drain:      'bg-teal-100   text-teal-700',
-  finition:   'bg-pink-100   text-pink-700',
-  enduit:     'bg-amber-100  text-amber-700',
-  nappe:      'bg-lime-100   text-lime-700',
-};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function EstimatorWizard() {
   const navigate = useNavigate();
-   // Selections
-  const [selService, setSelService]   = useState(null);
-  const [selSubtype, setSelSubtype]   = useState(null);
-  const [selProduct, setSelProduct]   = useState(null);
-  const [selCase, setSelCase]         = useState(null);
-  const [calculation, setCalculation] = useState(null);
-  const [removedMaterials, setRemovedMaterials] = useState(new Set());
 
   // UI state
   const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading]         = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // API data
-  const [services, setServices]             = useState([]);
-  const [products, setProducts]             = useState([]);
-  // const [pricingFactors, setPricingFactors] = useState({});
+  // Selections
+  const [selType, setSelType] = useState(null);  // toiture, mur, salle_bain
+  const [selToitureType, setSelToitureType] = useState(null);  // accessible / non_accessible
+  const [selIsolation, setSelIsolation] = useState(null);  // true / false
+  const [selFinition, setSelFinition] = useState(null);  // for non-accessible only
+  const [calculation, setCalculation] = useState(null);
+  const [removedMaterials, setRemovedMaterials] = useState(new Set());
 
+  // Form data for toiture
+  const [toitureData, setToitureData] = useState({
+    longueur: '',
+    largeur: '',
+    perimetre: '',
+    hauteur_acrotere: '',
+    nombre_evacuations: '1',
+    chape_existante: true,
+  });
 
-  // Dimensions form
-  const [dims, setDims] = useState({ longueur: '', largeur: '', hauteur: '', nombre_murs: 4 });
+  // Form data for mur/salle_bain
+  const [standardData, setStandardData] = useState({
+    longueur: '',
+    largeur: '',
+    hauteur: '',
+    nombre_murs: 4,
+  });
+
   const [info, setInfo] = useState({ project_name: '', project_location: '', notes: '' });
-  const [factors, setFactors] = useState({ height: 1.00, condition: 1.00, complexity: 1.00, region: 1.00 });
 
-  // Derived
-  const needsSubtype = selService ? SERVICES_WITH_SUBTYPES.includes(selService.code) : false;
-
-  // Auto-calc surface display
-  const isWall   = selProduct?.subcategory === 'mur' || selService?.code === 'facade' || selProduct?.code === 'cuvelage_interieur' || selProduct?.code === 'sel_mur_salle_eau' || selProduct?.code === 'mur_enterre_bitumineux';
-  const surfaceCalc = isWall
-    ? (parseFloat(dims.longueur) || 0) * (parseFloat(dims.hauteur) || 0) * (parseInt(dims.nombre_murs) || 4)
-    : (parseFloat(dims.longueur) || 0) * (parseFloat(dims.largeur) || 0);
-
-  // Steps config
+  // Steps configuration
   const buildSteps = () => {
-    const base = [{ id: 1, label: 'Service' }];
-    if (needsSubtype) base.push({ id: 2, label: selService?.code === 'facade' ? 'Collection' : 'Type' });
-    base.push({ id: needsSubtype ? 3 : 2, label: 'Produit' });
-    base.push({ id: needsSubtype ? 4 : 3, label: 'Application' });
-    base.push({ id: needsSubtype ? 5 : 4, label: 'Détails' });
-    base.push({ id: needsSubtype ? 6 : 5, label: 'Résumé' });
-    return base;
-  };
-  const steps       = buildSteps();
-  const uiIdx       = steps.findIndex(s => s.id === currentStep) + 1;
-  const isProduct   = (currentStep === 2 && !needsSubtype) || (currentStep === 3 && needsSubtype);
-  const isCases     = (currentStep === 3 && !needsSubtype) || (currentStep === 4 && needsSubtype);
-  const isDetails   = (currentStep === 4 && !needsSubtype) || (currentStep === 5 && needsSubtype);
-  const isSummary   = (currentStep === 5 && !needsSubtype) || (currentStep === 6 && needsSubtype);
-
-  useEffect(() => { fetchServices() }, []);
-
-  // Load products when step changes to product step
-  useEffect(() => {
-    if (isProduct && selService && (!needsSubtype || selSubtype)) {
-      fetchProducts(selService.id, selSubtype?.key);
+    if (selType === 'toiture') {
+      return [
+        { id: 1, label: 'Type' },
+        { id: 2, label: 'Toiture' },
+        { id: 3, label: 'Isolation' },
+        { id: 4, label: 'Détails' },
+        { id: 5, label: 'Résumé' },
+      ];
+    } else {
+      return [
+        { id: 1, label: 'Type' },
+        { id: 2, label: 'Détails' },
+        { id: 3, label: 'Résumé' },
+      ];
     }
-  }, [currentStep]);
-
-  const fetchServices = async () => {
-    try { const r = await estimatorAPI.getServices(); setServices(r.data.data); }
-    catch { toast.error('Erreur chargement services'); }
   };
 
-  // const fetchPricingFactors = async () => {
-  //   try { const r = await estimatorAPI.getPricingFactors(); setPricingFactors(r.data.data); }
-  //   catch {}
-  // };
+  const steps = buildSteps();
+  const uiIdx = steps.findIndex(s => s.id === currentStep) + 1;
 
-  const fetchProducts = async (serviceId, subcategory = null) => {
-    try {
-      setLoading(true);
-      const r = await estimatorAPI.getServiceProducts(serviceId, subcategory ? { subcategory } : {});
-      setProducts(r.data.data);
-    } catch { toast.error('Erreur chargement produits'); }
-    finally { setLoading(false); }
-  };
-
-  // ── Navigation handlers ─────────────────────────────────────────────────────
+  // ── Navigation ──────────────────────────────────────────────────────────────
   const canGoNext = () => {
-    if (currentStep === 1) return !!selService;
-    if (currentStep === 2 && needsSubtype) return !!selSubtype;
-    if (isProduct) return !!selProduct;
-    if (isCases) return !!selCase;
-    if (isDetails) return false; // form has its own submit
+    if (currentStep === 1) return !!selType;
+    if (currentStep === 2 && selType === 'toiture') return !!selToitureType;
+    if (currentStep === 3 && selType === 'toiture') return selIsolation !== null;
     return false;
   };
 
   const handleNext = () => {
     if (!canGoNext()) {
-      if (currentStep === 1) toast.error('Veuillez sélectionner un service');
-      else if (currentStep === 2 && needsSubtype) toast.error('Veuillez sélectionner un type');
-      else if (isProduct) toast.error('Veuillez sélectionner un produit');
-      else if (isCases) toast.error('Veuillez sélectionner un cas d\'application');
+      if (currentStep === 1) toast.error('Veuillez sélectionner un type d\'étanchéité');
+      else if (currentStep === 2) toast.error('Veuillez sélectionner le type de toiture');
+      else if (currentStep === 3) toast.error('Choisissez si vous souhaitez une isolation');
       return;
     }
     setCurrentStep(c => c + 1);
@@ -171,54 +123,87 @@ export default function EstimatorWizard() {
   };
 
   const handleCalculate = async (e) => {
-  e.preventDefault();
-  if (!dims.longueur || !dims.largeur) { toast.error('Renseignez les dimensions'); return; }
-  try {
-    setLoading(true);
-    const r = await estimatorAPI.calculateDevis({
-      product_id:      selProduct.id,
-      product_case_id: selCase.id,
-      longueur:    parseFloat(dims.longueur),
-      largeur:     parseFloat(dims.largeur),
-      hauteur:     parseFloat(dims.hauteur) || 0,
-      nombre_murs: parseInt(dims.nombre_murs) || 4,
-      factor_height:     factors.height,
-      factor_condition:  factors.condition,
-      factor_complexity: factors.complexity,
-      factor_region:     factors.region,
-    });
-    setCalculation(r.data.data);
-    setRemovedMaterials(new Set()); // ← ADD THIS LINE (reset removed materials)
-    setCurrentStep(needsSubtype ? 6 : 5);
-  } catch { toast.error('Erreur lors du calcul'); }
-  finally { setLoading(false); }
-};
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      
+      let payload;
+      
+      if (selType === 'toiture') {
+        // Validate toiture form
+        if (!toitureData.longueur || !toitureData.largeur || !toitureData.perimetre) {
+          toast.error('Veuillez remplir tous les champs obligatoires');
+          return;
+        }
+
+        payload = {
+          type: 'toiture',
+          toiture_type: selToitureType,
+          isolation: selIsolation,
+          finition: selFinition,
+          chape_existante: toitureData.chape_existante,
+          ...toitureData,
+        };
+      } else {
+        // Validate standard form
+        if (!standardData.longueur || !standardData.largeur) {
+          toast.error('Veuillez remplir les dimensions');
+          return;
+        }
+
+        payload = {
+          type: selType,
+          ...standardData,
+        };
+      }
+
+      const r = await estimatorAPI.calculateToiture(payload);
+      setCalculation(r.data.data);
+      setRemovedMaterials(new Set());
+      
+      if (selType === 'toiture') {
+        setCurrentStep(5);
+      } else {
+        setCurrentStep(3);
+      }
+      
+    } catch (error) {
+      console.error('Calculate error:', error);
+      toast.error('Erreur lors du calcul');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async (status) => {
     try {
       setLoading(true);
-      const r = await estimatorAPI.createDevis({
-        service_id:      selService.id,
-        product_id:      selProduct.id,
-        product_case_id: selCase.id,
-        subcategory:     selSubtype?.key || null,
+      
+      const payload = {
+        type: selType,
         status,
-        longueur:    parseFloat(dims.longueur),
-        largeur:     parseFloat(dims.largeur),
-        hauteur:     parseFloat(dims.hauteur) || 0,
-        nombre_murs: parseInt(dims.nombre_murs) || 4,
-        project_name:     info.project_name,
+        calculation: calculation,
+        project_name: info.project_name,
         project_location: info.project_location,
-        notes:            info.notes,
-        factor_height:     factors.height,
-        factor_condition:  factors.condition,
-        factor_complexity: factors.complexity,
-        factor_region:     factors.region,
-      });
+        notes: info.notes,
+        ...(selType === 'toiture' ? {
+          toiture_type: selToitureType,
+          isolation: selIsolation,
+          finition: selFinition,
+          ...toitureData,
+        } : standardData),
+      };
+
+      const r = await estimatorAPI.createToitureDevis(payload);
       toast.success('Devis créé avec succès!');
       navigate(`/devis/${r.data.data.id}`);
-    } catch { toast.error('Erreur lors de la création'); }
-    finally { setLoading(false); }
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -226,7 +211,6 @@ export default function EstimatorWizard() {
     <>
       <Navbar />
       <div className="min-h-screen bg-neutral-50">
-
         {/* Header */}
         <div>
           <div className="container mx-auto px-4 sm:px-6 lg:px-16 py-8">
@@ -240,7 +224,7 @@ export default function EstimatorWizard() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-16 py-5">
             <div className="flex items-center max-w-3xl mx-auto">
               {steps.map((step, idx) => {
-                const done   = uiIdx > idx + 1;
+                const done = uiIdx > idx + 1;
                 const active = uiIdx === idx + 1;
                 return (
                   <div key={step.id} className="flex items-center flex-1">
@@ -261,35 +245,35 @@ export default function EstimatorWizard() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-16 py-8">
           <div className="max-w-4xl mx-auto">
 
-            {/* ── STEP 1: SERVICE ── */}
+            {/* ── STEP 1: TYPE D'ÉTANCHÉITÉ ── */}
             {currentStep === 1 && (
               <div className="bg-white border border-neutral-200 rounded-2xl p-8">
-                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Quel service vous intéresse ?</h2>
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Quel type d'étanchéité ?</h2>
                 <p className="text-neutral-600 font-body mb-8">Sélectionnez le type de travaux pour votre projet</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {services.map(svc => (
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  {ETANCHEITE_TYPES.map(type => (
                     <button
-                      key={svc.id}
-                      onClick={() => setSelService(svc)}
+                      key={type.key}
+                      onClick={() => setSelType(type.key)}
                       className={`group bg-white border-2 rounded-2xl p-6 text-center transition-all hover:shadow-sm ${
-                        selService?.id === svc.id
+                        selType === type.key
                           ? 'border-primary-500 bg-primary-50'
                           : 'border-neutral-200 hover:border-primary-300'
                       }`}>
                       <div className={`w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 transition-colors ${
-                        selService?.id === svc.id ? 'bg-primary-200' : 'bg-primary-100 group-hover:bg-primary-200'
+                        selType === type.key ? 'bg-primary-200' : 'bg-primary-100 group-hover:bg-primary-200'
                       }`}>
                         <svg className="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={SERVICE_ICON_PATHS[svc.code] || SERVICE_ICON_PATHS.coffrage} />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={type.icon} />
                         </svg>
                       </div>
-                      <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">{svc.name}</h3>
-                      {/* <p className="text-sm text-neutral-600 font-body">{svc.description}</p> */}
+                      <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">{type.label}</h3>
+                      <p className="text-sm text-neutral-600 font-body">{type.description}</p>
                     </button>
                   ))}
                 </div>
 
-                {/* Navigation */}
                 <div className="flex justify-end">
                   <button onClick={handleNext} disabled={!canGoNext()}
                     className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 text-white font-heading font-semibold rounded-lg transition-all disabled:cursor-not-allowed">
@@ -302,165 +286,28 @@ export default function EstimatorWizard() {
               </div>
             )}
 
-            {/* ── STEP 2 (with subtype): COLLECTION / TYPE ── */}
-            {currentStep === 2 && needsSubtype && (
+            {/* ── STEP 2 (TOITURE): TYPE DE TOITURE ── */}
+            {currentStep === 2 && selType === 'toiture' && (
               <div className="bg-white border border-neutral-200 rounded-2xl p-8">
-                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">
-                  {selService.code === 'facade' ? 'Quelle collection ?' : "Quel type d'étanchéité ?"}
-                </h2>
-                <p className="text-neutral-600 font-body mb-8">
-                  {selService.code === 'facade' ? 'Choisissez la collection pour votre projet' : 'Précisez le type de support à traiter'}
-                </p>
-
-                {/* Responsive Grid: 1 col mobile, 2 col tablet, flex/3 col large */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {SUBTYPES[selService.code].map(sub => (
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Type de toiture</h2>
+                <p className="text-neutral-600 font-body mb-8">La toiture sera-t-elle accessible ?</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  {TOITURE_TYPES.map(type => (
                     <button
-                      key={sub.key}
-                      onClick={() => setSelSubtype(sub)}
-                      className={`group bg-white border-2 rounded-2xl p-6 text-center transition-all hover:shadow-sm ${
-                        selSubtype?.key === sub.key
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-neutral-200 hover:border-primary-300'
-                      }`}>
-                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 transition-colors ${
-                        selSubtype?.key === sub.key ? 'bg-primary-200' : 'bg-primary-100 group-hover:bg-primary-200'
-                      }`}>
-                        <svg className="w-7 h-7 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={SUBTYPE_ICON_PATHS[sub.key]} />
-                        </svg>
-                      </div>
-                      <h3 className="font-heading font-bold text-lg text-neutral-900 mb-1">{sub.label}</h3>
-                      <p className="text-xs text-neutral-600 font-body">{sub.description}</p>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Navigation */}
-                <div className="flex justify-between">
-                  <button onClick={handlePrev}
-                    className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Précédent
-                  </button>
-                  <button onClick={handleNext} disabled={!canGoNext()}
-                    className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 text-white font-heading font-semibold rounded-lg transition-all disabled:cursor-not-allowed">
-                    Suivant
-                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ── PRODUCT STEP ── */}
-            {isProduct && (
-              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
-                <div className="mb-8">
-                  <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Choisissez votre produit</h2>
-                  <p className="text-neutral-600 font-body flex items-center gap-2 flex-wrap">
-                    {selService.name}
-                    {selSubtype && <span className="px-2.5 py-0.5 bg-primary-100 text-primary-700 text-xs font-heading font-semibold rounded-full">{selSubtype.label}</span>}
-                  </p>
-                </div>
-
-                {loading ? (
-                  <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-500"></div></div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                      {products.map(prod => (
-                        <button
-                          key={prod.id}
-                          onClick={() => setSelProduct(prod)}
-                          className={`group bg-white border-2 rounded-2xl p-6 text-left transition-all hover:shadow-sm ${
-                            selProduct?.id === prod.id
-                              ? 'border-primary-500 ring-2 ring-primary-100'
-                              : 'border-neutral-200 hover:border-primary-300'
-                          }`}>
-                          <div className="flex items-start justify-between mb-3">
-                            <h3 className="font-heading font-bold text-lg text-neutral-900 pr-2">{prod.name}</h3>
-                            <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                              {/* <span className={`px-2.5 py-0.5 text-xs font-heading font-semibold rounded-lg ${prod.category === 'premium' ? 'bg-accent-100 text-accent-700' : prod.category === 'standard' ? 'bg-primary-100 text-primary-700' : 'bg-neutral-100 text-neutral-700'}`}>{prod.category}</span> */}
-                              {/* {prod.norme && <span className="text-xs text-neutral-400 font-body">{prod.norme}</span>} */}
-                            </div>
-                          </div>
-                          {/* <p className="text-sm text-neutral-600 font-body mb-4 line-clamp-2">{prod.description}</p> */}
-                          <div className="flex items-center justify-between text-sm border-t border-neutral-100 pt-3">
-                            <span className="text-neutral-500 font-body">Prix / m²</span>
-                            <span className="font-heading font-bold text-primary-500">{fmt(prod.price_min)} – {fmt(prod.price_max)}</span>
-                          </div>
-                          {prod.warranty_years && (
-                            <div className="mt-2 flex items-center text-xs text-neutral-500 font-body">
-                              {/* <svg className="w-3.5 h-3.5 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                              </svg> */}
-                              {/* Garantie {prod.warranty_years} ans */}
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Navigation */}
-                    <div className="flex justify-between">
-                      <button onClick={handlePrev}
-                        className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        Précédent
-                      </button>
-                      <button onClick={handleNext} disabled={!canGoNext()}
-                        className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 text-white font-heading font-semibold rounded-lg transition-all disabled:cursor-not-allowed">
-                        Suivant
-                        <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* ── CASE STEP ── */}
-            {isCases && selProduct && (
-              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
-                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Cas d'application</h2>
-                <p className="text-neutral-600 font-body mb-2">
-                  {selProduct.name}
-                  {/* {selProduct.norme && <span className="ml-2 text-xs text-neutral-400">({selProduct.norme})</span>} */}
-                </p>
-                <p className="text-sm text-neutral-500 font-body mb-8">Sélectionnez le cas qui correspond à votre chantier</p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {selProduct.cases?.map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => setSelCase(c)}
+                      key={type.key}
+                      onClick={() => setSelToitureType(type.key)}
                       className={`group bg-white border-2 rounded-2xl p-6 text-left transition-all hover:shadow-sm ${
-                        selCase?.id === c.id
+                        selToitureType === type.key
                           ? 'border-primary-500 bg-primary-50'
                           : 'border-neutral-200 hover:border-primary-300'
                       }`}>
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${
-                        selCase?.id === c.id ? 'bg-primary-200' : 'bg-primary-100 group-hover:bg-primary-200'
-                      }`}>
-                        <svg className="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {CASE_ICONS[c.icon_type] || CASE_ICONS.check}
-                        </svg>
-                      </div>
-                      <h3 className="font-heading font-bold text-base text-neutral-900 mb-2">{c.name}</h3>
-                      <p className="text-sm text-neutral-600 font-body leading-relaxed">{c.description}</p>
+                      <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">{type.label}</h3>
+                      <p className="text-sm text-neutral-600 font-body">{type.description}</p>
                     </button>
                   ))}
                 </div>
 
-                {/* Navigation */}
                 <div className="flex justify-between">
                   <button onClick={handlePrev}
                     className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
@@ -480,20 +327,61 @@ export default function EstimatorWizard() {
               </div>
             )}
 
-            {/* ── DETAILS STEP ── */}
-            {isDetails && (
+            {/* ── STEP 3 (TOITURE): ISOLATION ── */}
+            {currentStep === 3 && selType === 'toiture' && (
               <div className="bg-white border border-neutral-200 rounded-2xl p-8">
-                <div className="mb-8">
-                  <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-1">Détails du projet</h2>
-                  <p className="text-sm text-neutral-500 font-body">
-                    {selService.name}
-                    {selSubtype && <><span className="mx-1 text-neutral-300">›</span>{selSubtype.label}</>}
-                    <span className="mx-1 text-neutral-300">›</span>{selProduct.name}
-                    <span className="mx-1 text-neutral-300">›</span>{selCase.name}
-                  </p>
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Isolation thermique</h2>
+                <p className="text-neutral-600 font-body mb-8">Souhaitez-vous une isolation thermique ? (Toiture chaude)</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  <button
+                    onClick={() => setSelIsolation(true)}
+                    className={`group bg-white border-2 rounded-2xl p-6 text-left transition-all hover:shadow-sm ${
+                      selIsolation === true
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-neutral-200 hover:border-primary-300'
+                    }`}>
+                    <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">Oui (Toiture chaude)</h3>
+                    <p className="text-sm text-neutral-600 font-body">Avec isolation thermique</p>
+                  </button>
+                  <button
+                    onClick={() => setSelIsolation(false)}
+                    className={`group bg-white border-2 rounded-2xl p-6 text-left transition-all hover:shadow-sm ${
+                      selIsolation === false
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-neutral-200 hover:border-primary-300'
+                    }`}>
+                    <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">Non</h3>
+                    <p className="text-sm text-neutral-600 font-body">Sans isolation thermique</p>
+                  </button>
                 </div>
 
-                <form onSubmit={handleCalculate} className="space-y-8">
+                <div className="flex justify-between">
+                  <button onClick={handlePrev}
+                    className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Précédent
+                  </button>
+                  <button onClick={handleNext} disabled={!canGoNext()}
+                    className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 text-white font-heading font-semibold rounded-lg transition-all disabled:cursor-not-allowed">
+                    Suivant
+                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 4: DETAILS FORM (TOITURE) ── */}
+            {currentStep === 4 && selType === 'toiture' && (
+              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Informations techniques</h2>
+                <p className="text-neutral-600 font-body mb-8">Renseignez les dimensions de votre toiture</p>
+
+                <form onSubmit={handleCalculate} className="space-y-6">
                   {/* Project info */}
                   <div>
                     <h3 className="font-heading font-semibold text-neutral-800 mb-4">Informations du projet</h3>
@@ -502,7 +390,7 @@ export default function EstimatorWizard() {
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Nom du projet</label>
                         <input type="text" value={info.project_name} onChange={e => setInfo({...info, project_name: e.target.value})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                          placeholder="Ex: Rénovation façade villa" />
+                          placeholder="Ex: Rénovation toiture villa" />
                       </div>
                       <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Localisation</label>
@@ -519,49 +407,175 @@ export default function EstimatorWizard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur (m) <span className="text-red-500">*</span></label>
-                        <input type="number" required min="0.1" step="0.01" value={dims.longueur}
-                          onChange={e => setDims({...dims, longueur: e.target.value})}
+                        <input type="number" required min="0.1" step="0.01" value={toitureData.longueur}
+                          onChange={e => setToitureData({...toitureData, longueur: e.target.value})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                           placeholder="0.00" />
                       </div>
                       <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Largeur (m) <span className="text-red-500">*</span></label>
-                        <input type="number" required min="0.1" step="0.01" value={dims.largeur}
-                          onChange={e => setDims({...dims, largeur: e.target.value})}
+                        <input type="number" required min="0.1" step="0.01" value={toitureData.largeur}
+                          onChange={e => setToitureData({...toitureData, largeur: e.target.value})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                           placeholder="0.00" />
                       </div>
-                      {isWall && (
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Périmètre (ml) <span className="text-red-500">*</span></label>
+                        <input type="number" required min="0.1" step="0.01" value={toitureData.perimetre}
+                          onChange={e => setToitureData({...toitureData, perimetre: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="0.00" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur acrotère (m)</label>
+                        <input type="number" min="0" step="0.01" value={toitureData.hauteur_acrotere}
+                          onChange={e => setToitureData({...toitureData, hauteur_acrotere: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="0.00" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Options */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Options</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Nombre d'évacuations</label>
+                        <input type="number" min="1" value={toitureData.nombre_evacuations}
+                          onChange={e => setToitureData({...toitureData, nombre_evacuations: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Chape de pente existante ?</label>
+                        <select value={toitureData.chape_existante} onChange={e => setToitureData({...toitureData, chape_existante: e.target.value === 'true'})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
+                          <option value="true">Oui</option>
+                          <option value="false">Non</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Finition (only for non-accessible) */}
+                  {selToitureType === 'non_accessible' && (
+                    <div>
+                      <h3 className="font-heading font-semibold text-neutral-800 mb-4">Choix de finition</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {TOITURE_FINITIONS.map(fin => (
+                          <button
+                            key={fin.key}
+                            type="button"
+                            onClick={() => setSelFinition(fin.key)}
+                            className={`group bg-white border-2 rounded-2xl p-4 text-left transition-all hover:shadow-sm ${
+                              selFinition === fin.key
+                                ? 'border-primary-500 bg-primary-50'
+                                : 'border-neutral-200 hover:border-primary-300'
+                            }`}>
+                            <h4 className="font-heading font-bold text-base text-neutral-900 mb-1">{fin.label}</h4>
+                            <p className="text-sm text-neutral-600 font-body">{fin.description}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Notes</label>
+                    <textarea value={info.notes} onChange={e => setInfo({...info, notes: e.target.value})} rows={3}
+                      className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+                      placeholder="Informations complémentaires..." />
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="flex justify-between pt-4">
+                    <button type="button" onClick={handlePrev}
+                      className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Précédent
+                    </button>
+                    <button type="submit" disabled={loading}
+                      className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md">
+                      {loading ? 'Calcul en cours...' : 'Calculer le prix'}
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* ── STEP 2 (MUR/SALLE_BAIN): DETAILS FORM ── */}
+            {currentStep === 2 && (selType === 'mur' || selType === 'salle_bain') && (
+              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Détails du projet</h2>
+                <p className="text-neutral-600 font-body mb-8">Renseignez les dimensions</p>
+
+                <form onSubmit={handleCalculate} className="space-y-6">
+                  {/* Project info */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Informations du projet</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Nom du projet</label>
+                        <input type="text" value={info.project_name} onChange={e => setInfo({...info, project_name: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="Ex: Étanchéité mur" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Localisation</label>
+                        <input type="text" value={info.project_location} onChange={e => setInfo({...info, project_location: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="Ex: Casablanca" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dimensions */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Dimensions</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur (m) <span className="text-red-500">*</span></label>
+                        <input type="number" required min="0.1" step="0.01" value={standardData.longueur}
+                          onChange={e => setStandardData({...standardData, longueur: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="0.00" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Largeur (m) <span className="text-red-500">*</span></label>
+                        <input type="number" required min="0.1" step="0.01" value={standardData.largeur}
+                          onChange={e => setStandardData({...standardData, largeur: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="0.00" />
+                      </div>
+                      {selType === 'mur' && (
                         <>
                           <div>
                             <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur (m)</label>
-                            <input type="number" min="0.1" step="0.01" value={dims.hauteur}
-                              onChange={e => setDims({...dims, hauteur: e.target.value})}
+                            <input type="number" min="0.1" step="0.01" value={standardData.hauteur}
+                              onChange={e => setStandardData({...standardData, hauteur: e.target.value})}
                               className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                               placeholder="0.00" />
                           </div>
                           <div>
                             <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Nb. murs</label>
-                            <input type="number" min="1" max="10" value={dims.nombre_murs}
-                              onChange={e => setDims({...dims, nombre_murs: e.target.value})}
+                            <input type="number" min="1" max="10" value={standardData.nombre_murs}
+                              onChange={e => setStandardData({...standardData, nombre_murs: e.target.value})}
                               className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" />
                           </div>
                         </>
                       )}
                     </div>
-
-                    {/* Surface preview */}
-                    {surfaceCalc > 0 && (
-                      <div className="mt-4 p-4 bg-primary-50 border border-primary-200 rounded-xl flex items-center justify-between">
-                        <span className="text-sm font-body text-primary-700">Surface calculée automatiquement</span>
-                        <span className="font-display font-bold text-xl text-primary-600">{surfaceCalc.toFixed(2)} m²</span>
-                      </div>
-                    )}
                   </div>
 
                   {/* Notes */}
                   <div>
-                    <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Notes <span className="text-neutral-400 font-body font-normal">(optionnel)</span></label>
+                    <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Notes</label>
                     <textarea value={info.notes} onChange={e => setInfo({...info, notes: e.target.value})} rows={3}
                       className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
                       placeholder="Informations complémentaires..." />
@@ -589,155 +603,107 @@ export default function EstimatorWizard() {
             )}
 
             {/* ── SUMMARY STEP ── */}
-            {isSummary && calculation && (
+            {calculation && ((currentStep === 5 && selType === 'toiture') || (currentStep === 3 && selType !== 'toiture')) && (
               <div className="space-y-6">
-                {/* Breadcrumb recap */}
+                {/* Recap */}
                 <div className="bg-white border border-neutral-200 rounded-2xl p-5">
                   <div className="flex flex-wrap gap-6 text-sm">
-                    {[
-                      ['Service', selService.name],
-                      ...(selSubtype ? [['Type', selSubtype.label]] : []),
-                      ['Produit', selProduct.name],
-                      ['Cas', selCase.name],
-                      ['Surface', `${calculation.surface_area} m²`],
-                      ...(info.project_location ? [['Lieu', info.project_location]] : []),
-                    ].map(([label, val]) => (
-                      <div key={label}>
-                        <p className="text-xs text-neutral-500 font-body">{label}</p>
-                        <p className="font-heading font-semibold text-neutral-900">{val}</p>
+                    <div>
+                      <p className="text-xs text-neutral-500 font-body">Type</p>
+                      <p className="font-heading font-semibold text-neutral-900">
+                        {ETANCHEITE_TYPES.find(t => t.key === selType)?.label}
+                      </p>
+                    </div>
+                    {selType === 'toiture' && (
+                      <>
+                        <div>
+                          <p className="text-xs text-neutral-500 font-body">Toiture</p>
+                          <p className="font-heading font-semibold text-neutral-900">
+                            {TOITURE_TYPES.find(t => t.key === selToitureType)?.label}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-neutral-500 font-body">Isolation</p>
+                          <p className="font-heading font-semibold text-neutral-900">
+                            {selIsolation ? 'Oui (Toiture chaude)' : 'Non'}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                    <div>
+                      <p className="text-xs text-neutral-500 font-body">Surface</p>
+                      <p className="font-heading font-semibold text-neutral-900">{calculation.surface_brute} m²</p>
+                    </div>
+                    {info.project_location && (
+                      <div>
+                        <p className="text-xs text-neutral-500 font-body">Lieu</p>
+                        <p className="font-heading font-semibold text-neutral-900">{info.project_location}</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 
-                {/* Materials list (DTU) with REMOVE functionality */}
-                {(() => {
-                  // Filter out removed materials
-                  const activeMaterials = calculation.calculated_materials?.filter((_, idx) => !removedMaterials.has(idx)) || [];
-                  
-                  // Proportional price adjustment
-                  const materialRatio = activeMaterials.length / (calculation.calculated_materials?.length || 1);
-                  const adjustedBasePrice = calculation.base_price * materialRatio;
-                  const adjustedSubtotal = adjustedBasePrice + (calculation.fixed_costs || 0);
-                  const adjustedTVA = adjustedSubtotal * (calculation.tva_rate / 100);
-
-                  const handleRemoveMaterial = (index) => {
-                    const newRemoved = new Set(removedMaterials);
-                    newRemoved.add(index);
-                    setRemovedMaterials(newRemoved);
-                  };
-
-                  return (
-                    <>
-                      {activeMaterials.length > 0 && (
-                        <div className="bg-white border border-neutral-200 rounded-2xl p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-heading text-lg font-bold text-neutral-900">Liste des produits — ordre DTU</h2>
-                            {removedMaterials.size > 0 && (
-                              <span className="text-xs text-neutral-500 font-body">
-                                {removedMaterials.size} produit{removedMaterials.size > 1 ? 's' : ''} retiré{removedMaterials.size > 1 ? 's' : ''}
-                              </span>
-                            )}
+                {/* Materials list */}
+                {calculation.materials?.length > 0 && (
+                  <div className="bg-white border border-neutral-200 rounded-2xl p-6">
+                    <h2 className="font-heading text-lg font-bold text-neutral-900 mb-4">Liste des produits</h2>
+                    <div className="space-y-3">
+                      {calculation.materials.filter((_, idx) => !removedMaterials.has(idx)).map((mat, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl group hover:bg-neutral-100 transition-colors">
+                          <div className="flex items-center gap-3 flex-1">
+                            <span className="w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-heading font-bold flex-shrink-0">
+                              {i + 1}
+                            </span>
+                            <span className="font-body text-neutral-900 text-sm">{mat.name}</span>
                           </div>
-                          <div className="space-y-3">
-                            {calculation.calculated_materials?.map((mat, i) => {
-                              if (removedMaterials.has(i)) return null;
-                              
-                              return (
-                                <div key={i} className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl group hover:bg-neutral-100 transition-colors">
-                                  <div className="flex items-center gap-3 flex-1">
-                                    <span className="w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-heading font-bold flex-shrink-0">
-                                      {mat.step}
-                                    </span>
-                                    <div className="flex-1">
-                                      <span className="font-body text-neutral-900 text-sm">{mat.name}</span>
-                                      {mat.is_optional && <span className="ml-2 text-xs text-neutral-400">(optionnel)</span>}
-                                      <span className={`ml-2 text-xs px-2 py-0.5 rounded font-body ${MATERIAL_TYPE_COLORS[mat.type] || 'bg-neutral-100 text-neutral-600'}`}>
-                                        {mat.type}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className="font-heading font-bold text-primary-500 text-sm">
-                                      {mat.quantity} {mat.unit}
-                                    </span>
-                                    {/* Remove button */}
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveMaterial(i)}
-                                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-100 text-neutral-400 hover:text-red-600 transition-all"
-                                      title="Retirer ce produit">
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                      </svg>
-                                    </button>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          <div className="flex items-center gap-3">
+                            <span className="font-heading font-bold text-primary-500 text-sm">
+                              {mat.quantity} {mat.unit}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setRemovedMaterials(new Set([...removedMaterials, i]))}
+                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-100 text-neutral-400 hover:text-red-600 transition-all"
+                              title="Retirer ce produit">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                              </svg>
+                            </button>
                           </div>
                         </div>
-                      )}
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                      {/* Price breakdown with adjusted prices */}
-                      <div className="bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-2xl p-6">
-                        <h2 className="font-heading text-xl font-bold mb-6">Calcul du prix</h2>
-                        <div className="space-y-3">
-                          <div className="flex justify-between pb-3 border-b border-primary-400">
-                            <span className="font-body">Prix de base ({calculation.surface_area} m²)</span>
-                            <span className="font-display font-bold">{fmt(adjustedBasePrice)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="font-body">+ Coûts fixes</span>
-                            <span>{fmt(calculation.fixed_costs || 0)}</span>
-                          </div>
-                          <div className="flex justify-between pt-2 border-t border-primary-400">
-                            <span className="font-body font-semibold">Sous-total HT</span>
-                            <span className="font-display font-bold">{fmt(adjustedSubtotal)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="font-body">TVA ({calculation.tva_rate}%)</span>
-                            <span>{fmt(adjustedTVA)}</span>
-                          </div>
-                        </div>
-                      </div>
+                {/* Price */}
+                <div className="bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-2xl p-6">
+                  <h2 className="font-heading text-xl font-bold mb-6">Estimation</h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between pb-3 border-b border-primary-400">
+                      <span className="font-body">Prix estimé</span>
+                      <span className="font-display font-bold">{fmt(calculation.total_ht || 0)}</span>
+                    </div>
+                  </div>
+                </div>
 
-                      {/* Duration */}
-                      {calculation.estimated_days > 0 && (
-                        <div className="bg-white border border-neutral-200 rounded-2xl p-5 flex items-center gap-4">
-                          <div className="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <svg className="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-xs text-neutral-500 font-body">Durée estimée des travaux</p>
-                            <p className="font-display font-bold text-2xl text-neutral-900">{calculation.estimated_days} jours</p>
-                            <p className="text-xs text-neutral-400 font-body">{calculation.preparation_days}j préparation + {calculation.drying_days}j séchage</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Save buttons */}
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <button onClick={() => handleSave('draft')} disabled={loading}
-                          className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-heading font-semibold rounded-lg transition-all disabled:opacity-50">
-                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-                          </svg>
-                          Sauvegarder comme brouillon
-                        </button>
-                        <button onClick={() => handleSave('saved')} disabled={loading}
-                          className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md">
-                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-                          </svg>
-                          Sauvegarder le devis
-                        </button>
-                      </div>
-                    </>
-                  );
-                })()}
+                {/* Save buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button onClick={() => handleSave('draft')} disabled={loading}
+                    className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-heading font-semibold rounded-lg transition-all disabled:opacity-50">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                    Sauvegarder comme brouillon
+                  </button>
+                  <button onClick={() => handleSave('saved')} disabled={loading}
+                    className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Sauvegarder le devis
+                  </button>
+                </div>
               </div>
             )}
 

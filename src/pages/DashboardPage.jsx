@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { devisAPI } from '../services/api';
+import { devisAPI, estimatorAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import Navbar from '../components/layout/Navbar';
@@ -53,8 +53,28 @@ export default function DashboardPage() {
   useEffect(() => { fetchDevis(); }, [tab, page]);
 
   const fetchStats = async () => {
-    try { const r = await devisAPI.stats(); setStats(r.data.data); }
-    catch {}
+    try {
+      // Fetch from both systems
+      const [oldStats, toitureStats] = await Promise.all([
+        devisAPI.stats().catch(() => ({ data: { data: { total: 0, draft: 0, saved: 0, submitted: 0, reviewed: 0, total_value: 0 } } })),
+        estimatorAPI.getToitureStats().catch(() => ({ data: { data: { total: 0, draft: 0, saved: 0, submitted: 0, reviewed: 0, total_value: 0 } } }))
+      ]);
+
+      const oldData = oldStats.data.data;
+      const toitureData = toitureStats.data.data;
+
+      // Combine stats
+      setStats({
+        total: (oldData.total || 0) + (toitureData.total || 0),
+        draft: (oldData.draft || 0) + (toitureData.draft || 0),
+        saved: (oldData.saved || 0) + (toitureData.saved || 0),
+        submitted: (oldData.submitted || 0) + (toitureData.submitted || 0),
+        reviewed: (oldData.reviewed || 0) + (toitureData.reviewed || 0),
+        total_value: (oldData.total_value || 0) + (toitureData.total_value || 0),
+      });
+    } catch (err) {
+      console.error('Stats error:', err);
+    }
   };
 
   const fetchDevis = async () => {
@@ -62,14 +82,51 @@ export default function DashboardPage() {
       setLoading(true);
       const params = { page, per_page: 8 };
       if (tab !== 'all') params.status = tab;
-      const r = await devisAPI.list(params);
-      setDevis(r.data.data.data ?? r.data.data);
-      setMeta(r.data.data.meta ?? {});
-    } catch { toast.error('Erreur chargement'); }
-    finally { setLoading(false); }
+
+      // Fetch from both systems
+      const [oldDevis, toitureDevis] = await Promise.all([
+        devisAPI.list(params).catch(() => ({ data: { data: { data: [], meta: {} } } })),
+        estimatorAPI.listToitureDevis(params).catch(() => ({ data: { data: { data: [], meta: {} } } }))
+      ]);
+
+      // Extract data
+      const oldList = Array.isArray(oldDevis.data.data) ? oldDevis.data.data : (oldDevis.data.data?.data || []);
+      const toitureList = Array.isArray(toitureDevis.data.data) ? toitureDevis.data.data : (toitureDevis.data.data?.data || []);
+
+      // Mark source for routing
+      const oldMarked = oldList.map(d => ({ ...d, _source: 'old' }));
+      const toitureMarked = toitureList.map(d => ({ ...d, _source: 'toiture' }));
+
+      // Combine and sort by created_at
+      const combined = [...oldMarked, ...toitureMarked].sort((a, b) => 
+        new Date(b.created_at) - new Date(a.created_at)
+      );
+
+      setDevis(combined);
+
+      // Use meta from whichever has more results
+      const meta1 = oldDevis.data.data?.meta || {};
+      const meta2 = toitureDevis.data.data?.meta || {};
+      setMeta(meta1.total > meta2.total ? meta1 : meta2);
+
+    } catch (err) {
+      console.error('Fetch error:', err);
+      toast.error('Erreur chargement');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTabChange = (t) => { setTab(t); setPage(1); };
+
+  const handleDevisClick = (d) => {
+    // Route based on source
+    if (d._source === 'toiture') {
+      navigate(`/toiture/devis/${d.id}`);
+    } else {
+      navigate(`/devis/${d.id}`);
+    }
+  };
 
   return (
     <>
@@ -85,7 +142,7 @@ export default function DashboardPage() {
               </h1>
               <p className="text-neutral-500 font-body mt-1">Gérez et suivez vos devis Alaq Seal</p>
             </div>
-            <button onClick={() => navigate('/estimateur/new')}
+            <button onClick={() => navigate('/new-devis')}
               className="inline-flex items-center px-5 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all shadow-sm hover:shadow-md flex-shrink-0">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
@@ -113,13 +170,6 @@ export default function DashboardPage() {
               sub="En attente de réponse"
               icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>}
             />
-            {/* <StatCard
-              label="Valeur totale"
-              value={fmt(stats.total_value)}
-              sub="Tous devis confondus"
-              accent
-              icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>}
-            /> */}
           </div>
 
           {/* Tabs + List */}
@@ -159,7 +209,7 @@ export default function DashboardPage() {
                   {tab === 'all' ? 'Créez votre premier devis pour commencer' : `Aucun devis avec le statut "${TABS.find(t => t.key === tab)?.label}"`}
                 </p>
                 {tab === 'all' && (
-                  <button onClick={() => navigate('/estimateur/new')}
+                  <button onClick={() => navigate('/new-devis')}
                     className="inline-flex items-center px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold text-sm rounded-lg transition-all">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
@@ -173,7 +223,7 @@ export default function DashboardPage() {
                 {devis.map(d => {
                   const s = STATUS_CONFIG[d.status] || STATUS_CONFIG.draft;
                   return (
-                    <button key={d.id} onClick={() => navigate(`/devis/${d.id}`)}
+                    <button key={`${d._source}-${d.id}`} onClick={() => handleDevisClick(d)}
                       className="w-full flex items-center gap-4 px-6 py-4 hover:bg-neutral-50 transition-colors text-left">
                       {/* Status dot */}
                       <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${s.dot}`} />
@@ -187,6 +237,11 @@ export default function DashboardPage() {
                           {d.subcategory && (
                             <span className="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-xs font-body rounded capitalize">{d.subcategory}</span>
                           )}
+                          {d.type && (
+                            <span className="px-2 py-0.5 bg-primary-100 text-primary-600 text-xs font-body rounded capitalize">
+                              {d.type === 'toiture' ? 'Toiture' : d.type === 'mur' ? 'Mur' : d.type === 'salle_bain' ? 'Salle bain' : d.type}
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-neutral-500 font-body mt-0.5">
                           {d.service?.name}
@@ -194,10 +249,12 @@ export default function DashboardPage() {
                           {d.product?.name}
                           {d.product_case && <span className="mx-1 text-neutral-300">·</span>}
                           {d.product_case?.name}
+                          {d.type && d.toiture_type && <span className="mx-1 text-neutral-300">·</span>}
+                          {d.toiture_type && (d.toiture_type === 'accessible' ? 'Accessible' : 'Non accessible')}
                         </p>
                         <p className="text-xs text-neutral-400 font-body mt-0.5">
                           {d.devis_number} · {fmtDate(d.created_at)}
-                          {d.surface_area && ` · ${d.surface_area} m²`}
+                          {(d.surface_area || d.surface_brute) && ` · ${d.surface_area || d.surface_brute} m²`}
                           {d.project_location && ` · ${d.project_location}`}
                         </p>
                       </div>
