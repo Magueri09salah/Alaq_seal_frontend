@@ -66,7 +66,7 @@ const ToitureDevisViewPage = () => {
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = `Devis_${devis.devis_number}.pdf`;
+      a.download = `${devis.devis_number}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
