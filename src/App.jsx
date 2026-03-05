@@ -13,6 +13,7 @@ import DevisViewPage from './pages/DevisViewPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ToitureDevisViewPage from './pages/ToitureDevisViewPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -122,8 +123,8 @@ function AppRoutes() {
         }
       />
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Fallback - 404 Not Found */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
