@@ -10,20 +10,20 @@ import Navbar from '../components/layout/Navbar';
 const ETANCHEITE_TYPES = [
   { 
     key: 'toiture', 
-    label: 'Étanchéité toiture plate', 
-    description: 'Toitures-terrasses accessibles ou non accessibles',
+    label: 'Toiture-terrasse', 
+    description: 'Étanchéité toiture plate',
     icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
   },
   { 
     key: 'mur', 
-    label: 'Étanchéité mur enterré', 
-    description: 'Cuvelage, murs enterrés, soubassements',
+    label: 'Mur', 
+    description: 'Étanchéité mur enterré',
     icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5'
   },
   { 
     key: 'salle_bain', 
-    label: 'Étanchéité sous carrelage', 
-    description: 'Salles de bain, douches, pièces humides',
+    label: 'Salle de bain', 
+    description: 'Étanchéité sous carrelage',
     icon: 'M4 6h16M4 10h16M4 14h16M4 18h16'
   },
 ];
