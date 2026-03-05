@@ -197,7 +197,8 @@ export default function EstimatorWizard() {
 
       const r = await estimatorAPI.createToitureDevis(payload);
       toast.success('Devis créé avec succès!');
-      navigate(`/devis/${r.data.data.id}`);
+      // Navigate to toiture devis view page (not old system)
+      navigate(`/toiture/devis/${r.data.data.id}`);
     } catch (error) {
       console.error('Save error:', error);
       toast.error('Erreur lors de la sauvegarde');

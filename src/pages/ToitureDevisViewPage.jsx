@@ -47,7 +47,7 @@ const ToitureDevisViewPage = () => {
 
   const handleDownloadPdf = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const url = `${import.meta.env.VITE_API_URL}/toiture/devis/${id}/download-pdf`;
       
       const response = await fetch(url, {
@@ -196,7 +196,7 @@ const ToitureDevisViewPage = () => {
                   </svg>
                   Télécharger PDF
                 </button>
-                {canSubmit && (
+                {/* {canSubmit && (
                   <button
                     onClick={handleSubmit}
                     className="inline-flex items-center px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white font-heading font-semibold text-sm rounded-lg transition-all shadow-sm hover:shadow-md">
@@ -205,7 +205,7 @@ const ToitureDevisViewPage = () => {
                     </svg>
                     Soumettre
                   </button>
-                )}
+                )} */}
                 {canEdit && (
                   <button
                     onClick={handleDelete}
