@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import GoogleButton from '../components/auth/Googlebutton';
+import Navbar from '../components/layout/Navbar'
 
 // Password strength indicator component
 const PasswordStrengthIndicator = ({ password }) => {
@@ -21,6 +22,7 @@ const PasswordStrengthIndicator = ({ password }) => {
   const strengthColor = validCount === 5 ? 'text-green-600' : validCount >= 3 ? 'text-yellow-600' : 'text-red-600';
 
   return (
+    <>
     <div className="mt-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-medium text-neutral-600">Force du mot de passe:</p>
@@ -45,6 +47,7 @@ const PasswordStrengthIndicator = ({ password }) => {
         ))}
       </ul>
     </div>
+    </>
   );
 };
 
@@ -55,6 +58,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [showStrength, setShowStrength] = useState(false);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -66,6 +70,11 @@ export default function RegisterPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
     
     if (name === 'password') {
       setShowStrength(value.length > 0);
@@ -86,33 +95,46 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.name || !formData.email || !formData.phone || !formData.password || !formData.password_confirmation) {
-      toast.error('Veuillez remplir tous les champs');
-      return;
+    // Clear previous errors
+    setErrors({});
+
+    // Client-side validation
+    const newErrors = {};
+
+    if (!formData.name) {
+      newErrors.name = 'Le nom est requis';
     }
 
-    // Email validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      toast.error('Veuillez entrer une adresse email valide');
-      return;
+    if (!formData.email) {
+      newErrors.email = 'L\'email est requis';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Format d\'email invalide';
     }
 
-    // Phone validation
-    if (!/^[\d\s+()-]{8,20}$/.test(formData.phone)) {
-      toast.error('Numéro de téléphone invalide');
-      return;
+    if (!formData.phone) {
+      newErrors.phone = 'Le téléphone est requis';
+    } else if (!/^[\d\s+()-]{8,20}$/.test(formData.phone)) {
+      newErrors.phone = 'Numéro de téléphone invalide';
     }
 
-    // Password validation
-    const passwordErrors = validatePassword(formData.password);
-    if (passwordErrors.length > 0) {
-      toast.error(`Le mot de passe doit contenir ${passwordErrors.join(', ')}`);
-      return;
+    if (!formData.password) {
+      newErrors.password = 'Le mot de passe est requis';
+    } else {
+      const passwordErrors = validatePassword(formData.password);
+      if (passwordErrors.length > 0) {
+        newErrors.password = `Le mot de passe doit contenir ${passwordErrors.join(', ')}`;
+      }
     }
 
-    if (formData.password !== formData.password_confirmation) {
-      toast.error('Les mots de passe ne correspondent pas');
+    if (!formData.password_confirmation) {
+      newErrors.password_confirmation = 'La confirmation est requise';
+    } else if (formData.password !== formData.password_confirmation) {
+      newErrors.password_confirmation = 'Les mots de passe ne correspondent pas';
+    }
+
+    // If there are client-side errors, show them and stop
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -123,14 +145,53 @@ export default function RegisterPage() {
       navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Register error:', error);
-      const errorMessage = error.response?.data?.message || 'Erreur lors de la création du compte';
-      toast.error(errorMessage);
+      console.log('Error response:', error.response?.data);
+      
+      // Handle backend validation errors
+      // Backend structure: { error: { code: "VALIDATION_ERROR", details: { email: ["..."] } } }
+      if (error.response?.data?.error?.details) {
+        const backendErrors = error.response.data.error.details;
+        const formattedErrors = {};
+
+        // Format backend errors - extract first error message for each field
+        Object.keys(backendErrors).forEach(key => {
+          formattedErrors[key] = Array.isArray(backendErrors[key]) 
+            ? backendErrors[key][0] 
+            : backendErrors[key];
+        });
+
+        console.log('Formatted validation errors:', formattedErrors);
+        setErrors(formattedErrors);
+      }
+      // Also handle old format for backward compatibility
+      else if (error.response?.status === 422 && error.response?.data?.errors) {
+        const backendErrors = error.response.data.errors;
+        const formattedErrors = {};
+
+        Object.keys(backendErrors).forEach(key => {
+          formattedErrors[key] = Array.isArray(backendErrors[key]) 
+            ? backendErrors[key][0] 
+            : backendErrors[key];
+        });
+
+        console.log('Formatted validation errors (old format):', formattedErrors);
+        setErrors(formattedErrors);
+      } 
+      // Handle other backend errors (show as toast)
+      else {
+        const errorMessage = error.response?.data?.error?.message 
+          || error.response?.data?.message 
+          || 'Erreur lors de la création du compte';
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
+    <>
+        <Navbar />
     <div className="min-h-screen relative flex items-center justify-center p-4">
       {/* Fixed background image */}
       <div 
@@ -182,9 +243,19 @@ export default function RegisterPage() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className={`w-full px-4 py-3 border rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.name ? 'border-red-500 bg-red-50' : 'border-neutral-300'
+                }`}
                 placeholder="Jean Dupont"
               />
+              {errors.name && (
+                <p className="mt-2 text-sm text-red-600 font-body flex items-center">
+                  <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             {/* Email */}
@@ -199,9 +270,19 @@ export default function RegisterPage() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className={`w-full px-4 py-3 border rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.email ? 'border-red-500 bg-red-50' : 'border-neutral-300'
+                }`}
                 placeholder="votre@email.com"
               />
+              {errors.email && (
+                <p className="mt-2 text-sm text-red-600 font-body flex items-center">
+                  <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  {errors.email}
+                </p>
+              )}
             </div>
 
             {/* Phone */}
@@ -216,9 +297,19 @@ export default function RegisterPage() {
                 required
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                className={`w-full px-4 py-3 border rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.phone ? 'border-red-500 bg-red-50' : 'border-neutral-300'
+                }`}
                 placeholder="06 12 34 56 78"
               />
+              {errors.phone && (
+                <p className="mt-2 text-sm text-red-600 font-body flex items-center">
+                  <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  {errors.phone}
+                </p>
+              )}
             </div>
 
             {/* Password with toggle */}
@@ -234,7 +325,9 @@ export default function RegisterPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className={`w-full px-4 py-3 pr-12 border rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                    errors.password ? 'border-red-500 bg-red-50' : 'border-neutral-300'
+                  }`}
                   placeholder="••••••••"
                 />
                 <button
@@ -254,7 +347,15 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
-              {showStrength && <PasswordStrengthIndicator password={formData.password} />}
+              {errors.password && (
+                <p className="mt-2 text-sm text-red-600 font-body flex items-center">
+                  <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  {errors.password}
+                </p>
+              )}
+              {showStrength && !errors.password && <PasswordStrengthIndicator password={formData.password} />}
             </div>
 
             {/* Password Confirmation with toggle */}
@@ -270,7 +371,9 @@ export default function RegisterPage() {
                   required
                   value={formData.password_confirmation}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pr-12 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className={`w-full px-4 py-3 pr-12 border rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                    errors.password_confirmation ? 'border-red-500 bg-red-50' : 'border-neutral-300'
+                  }`}
                   placeholder="••••••••"
                 />
                 <button
@@ -290,6 +393,14 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
+              {errors.password_confirmation && (
+                <p className="mt-2 text-sm text-red-600 font-body flex items-center">
+                  <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  {errors.password_confirmation}
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -331,5 +442,6 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
