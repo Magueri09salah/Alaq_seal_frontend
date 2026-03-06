@@ -10,20 +10,20 @@ import Navbar from '../components/layout/Navbar';
 const ETANCHEITE_TYPES = [
   { 
     key: 'toiture', 
-    label: 'Toiture-terrasse', 
-    description: 'Étanchéité toiture plate',
+    label: 'Étanchéité toiture plate', 
+    description: 'Toitures-terrasses accessibles ou non accessibles',
     icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
   },
   { 
     key: 'mur', 
-    label: 'Mur', 
-    description: 'Étanchéité mur enterré',
+    label: 'Étanchéité mur enterré', 
+    description: 'Cuvelage, murs enterrés, soubassements',
     icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5'
   },
   { 
     key: 'salle_bain', 
-    label: 'Salle de bain', 
-    description: 'Étanchéité sous carrelage',
+    label: 'Étanchéité sous carrelage', 
+    description: 'Salles de bain, douches, pièces humides',
     icon: 'M4 6h16M4 10h16M4 14h16M4 18h16'
   },
 ];
@@ -606,6 +606,24 @@ export default function EstimatorWizard() {
             {/* ── SUMMARY STEP ── */}
             {calculation && ((currentStep === 5 && selType === 'toiture') || (currentStep === 3 && selType !== 'toiture')) && (
               <div className="space-y-6">
+                {/* Back button to edit */}
+                <div className="bg-white border border-neutral-200 rounded-2xl p-4">
+                  <button
+                    onClick={() => {
+                      if (selType === 'toiture') {
+                        setCurrentStep(4); // Go back to details form
+                      } else {
+                        setCurrentStep(2); // Go back to details form
+                      }
+                    }}
+                    className="inline-flex items-center text-sm font-heading font-medium text-neutral-600 hover:text-primary-600 transition-colors">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Modifier les informations
+                  </button>
+                </div>
+
                 {/* Recap */}
                 <div className="bg-white border border-neutral-200 rounded-2xl p-5">
                   <div className="flex flex-wrap gap-6 text-sm">

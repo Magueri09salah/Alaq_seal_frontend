@@ -17,9 +17,22 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      window.location.href = '/login';
+      // Get current page path
+      const currentPath = window.location.pathname;
+      
+      // List of authentication pages where we should NOT redirect
+      const authPages = ['/login', '/register', '/forgot-password', '/reset-password'];
+      
+      // Only redirect if NOT on an auth page
+      if (!authPages.includes(currentPath)) {
+        console.log('401 Unauthorized - redirecting to login');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        window.location.href = '/login';
+      } else {
+        console.log('401 Unauthorized - already on auth page, letting error propagate');
+        // Don't redirect, let the page handle the error
+      }
     }
     return Promise.reject(error);
   }
