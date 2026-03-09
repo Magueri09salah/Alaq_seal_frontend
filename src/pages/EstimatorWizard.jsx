@@ -11,20 +11,20 @@ import CityAutocomplete from '../components/common/CityAutocomplete';
 const ETANCHEITE_TYPES = [
   { 
     key: 'toiture', 
-    label: 'Étanchéité toiture plate', 
-    description: 'Toitures-terrasses accessibles ou non accessibles',
+    label: 'Toiture-terrasse', 
+    description: 'Étanchéité toiture plate',
     icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
   },
   { 
     key: 'mur', 
-    label: 'Étanchéité mur enterré', 
-    description: 'Cuvelage, murs enterrés, soubassements',
+    label: 'Mur', 
+    description: 'Étanchéité mur enterré',
     icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5'
   },
   { 
     key: 'salle_bain', 
-    label: 'Étanchéité sous carrelage', 
-    description: 'Salles de bain, douches, pièces humides',
+    label: 'Salle de bain', 
+    description: 'Étanchéité sous carrelage',
     icon: 'M4 6h16M4 10h16M4 14h16M4 18h16'
   },
 ];
@@ -39,6 +39,19 @@ const TOITURE_TYPES = [
 const TOITURE_FINITIONS = [
   { key: 'autoprotegee', label: 'Autoprotégée ardoisée', description: 'Finition directe ardoisée' },
   { key: 'lestage', label: 'Finition lisse + Lestage', description: 'Géotextile + Gravier 5cm' },
+];
+
+// Mur water level options
+const MUR_WATER_LEVELS = [
+  { key: 'humidite', label: 'Humidité du sol', description: 'Sol humide sans pression d\'eau' },
+  { key: 'infiltration', label: 'Infiltration d\'eau occasionnelle', description: 'Eau ponctuelle (pluie, ruissellement)' },
+  { key: 'nappe', label: 'Eau permanente / Nappe phréatique', description: 'Pression d\'eau constante sur le mur' },
+];
+
+// Salle de bain type options
+const SALLE_BAIN_TYPES = [
+  { key: 'avec_bac', label: 'Douche avec bac', description: 'Étanchéité standard avec receveur' },
+  { key: 'italienne', label: 'Douche italienne (sans bac)', description: 'Étanchéité renforcée zone douche' },
 ];
 
 const fmt = (p) => new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD', minimumFractionDigits: 0 }).format(p);
@@ -58,6 +71,10 @@ export default function EstimatorWizard() {
   const [selFinition, setSelFinition] = useState(null);  // for non-accessible only
   const [calculation, setCalculation] = useState(null);
   const [removedMaterials, setRemovedMaterials] = useState(new Set());
+
+  const [selWaterLevel, setSelWaterLevel] = useState(null);  // for mur: humidite, infiltration, nappe
+  const [selSdbType, setSelSdbType] = useState(null);  // for salle_bain: avec_bac, italienne
+  const [drainSelected, setDrainSelected] = useState(false);  // for mur drainage
 
   // Form data for toiture
   const [toitureData, setToitureData] = useState({
@@ -80,7 +97,7 @@ export default function EstimatorWizard() {
   const [info, setInfo] = useState({ project_name: '', project_location: '', notes: '' });
 
   // Steps configuration
-  const buildSteps = () => {
+    const buildSteps = () => {
     if (selType === 'toiture') {
       return [
         { id: 1, label: 'Type' },
@@ -88,6 +105,20 @@ export default function EstimatorWizard() {
         { id: 3, label: 'Isolation' },
         { id: 4, label: 'Détails' },
         { id: 5, label: 'Résumé' },
+      ];
+    } else if (selType === 'mur') {
+      return [
+        { id: 1, label: 'Type' },
+        { id: 2, label: 'Niveau d\'eau' },  // NEW
+        { id: 3, label: 'Détails' },
+        { id: 4, label: 'Résumé' },
+      ];
+    } else if (selType === 'salle_bain') {
+      return [
+        { id: 1, label: 'Type' },
+        { id: 2, label: 'Type douche' },  // NEW
+        { id: 3, label: 'Détails' },
+        { id: 4, label: 'Résumé' },
       ];
     } else {
       return [
@@ -102,10 +133,25 @@ export default function EstimatorWizard() {
   const uiIdx = steps.findIndex(s => s.id === currentStep) + 1;
 
   // ── Navigation ──────────────────────────────────────────────────────────────
-  const canGoNext = () => {
+    const canGoNext = () => {
     if (currentStep === 1) return !!selType;
-    if (currentStep === 2 && selType === 'toiture') return !!selToitureType;
-    if (currentStep === 3 && selType === 'toiture') return selIsolation !== null;
+    
+    // Toiture flow
+    if (selType === 'toiture') {
+      if (currentStep === 2) return !!selToitureType;
+      if (currentStep === 3) return selIsolation !== null;
+    }
+    
+    // Mur flow - NEW
+    if (selType === 'mur') {
+      if (currentStep === 2) return !!selWaterLevel;
+    }
+    
+    // Salle de bain flow - NEW
+    if (selType === 'salle_bain') {
+      if (currentStep === 2) return !!selSdbType;
+    }
+    
     return false;
   };
 
@@ -123,7 +169,7 @@ export default function EstimatorWizard() {
     setCurrentStep(c => Math.max(1, c - 1));
   };
 
-  const handleCalculate = async (e) => {
+    const handleCalculate = async (e) => {
     e.preventDefault();
 
     try {
@@ -132,30 +178,37 @@ export default function EstimatorWizard() {
       let payload;
       
       if (selType === 'toiture') {
-        // Validate toiture form
-        if (!toitureData.longueur || !toitureData.largeur) {
+        // KEEP EXISTING TOITURE LOGIC
+        // ...
+      } else if (selType === 'mur') {
+        // NEW: MUR LOGIC
+        if (!standardData.longueur || !standardData.hauteur) {
           toast.error('Veuillez remplir tous les champs obligatoires');
           return;
         }
 
+        // Force drain=true if nappe phréatique
+        const finalDrain = selWaterLevel === 'nappe' ? true : drainSelected;
+
         payload = {
-          type: 'toiture',
-          toiture_type: selToitureType,
-          isolation: selIsolation,
-          finition: selFinition,
-          chape_existante: toitureData.chape_existante,
-          ...toitureData,
+          type: 'mur',
+          water_level: selWaterLevel,
+          drain: finalDrain,
+          longueur: standardData.longueur,
+          hauteur: standardData.hauteur,
         };
-      } else {
-        // Validate standard form
+      } else if (selType === 'salle_bain') {
+        // NEW: SALLE DE BAIN LOGIC
         if (!standardData.longueur || !standardData.largeur) {
           toast.error('Veuillez remplir les dimensions');
           return;
         }
 
         payload = {
-          type: selType,
-          ...standardData,
+          type: 'salle_bain',
+          sdb_type: selSdbType,
+          longueur: standardData.longueur,
+          largeur: standardData.largeur,
         };
       }
 
@@ -163,10 +216,11 @@ export default function EstimatorWizard() {
       setCalculation(r.data.data);
       setRemovedMaterials(new Set());
       
+      // Navigate to summary
       if (selType === 'toiture') {
         setCurrentStep(5);
-      } else {
-        setCurrentStep(3);
+      } else if (selType === 'mur' || selType === 'salle_bain') {
+        setCurrentStep(4);
       }
       
     } catch (error) {
@@ -177,7 +231,7 @@ export default function EstimatorWizard() {
     }
   };
 
-  const handleSave = async (status) => {
+    const handleSave = async (status) => {
     try {
       setLoading(true);
       
@@ -188,17 +242,25 @@ export default function EstimatorWizard() {
         project_name: info.project_name,
         project_location: info.project_location,
         notes: info.notes,
-        ...(selType === 'toiture' ? {
-          toiture_type: selToitureType,
-          isolation: selIsolation,
-          finition: selFinition,
-          ...toitureData,
-        } : standardData),
       };
+
+      // Add type-specific data
+      if (selType === 'toiture') {
+        payload.toiture_type = selToitureType;
+        payload.isolation = selIsolation;
+        payload.finition = selFinition;
+        Object.assign(payload, toitureData);
+      } else if (selType === 'mur') {
+        payload.water_level = selWaterLevel;
+        payload.drain = selWaterLevel === 'nappe' ? true : drainSelected;
+        Object.assign(payload, standardData);
+      } else if (selType === 'salle_bain') {
+        payload.sdb_type = selSdbType;
+        Object.assign(payload, standardData);
+      }
 
       const r = await estimatorAPI.createToitureDevis(payload);
       toast.success('Devis créé avec succès!');
-      // Navigate to toiture devis view page (not old system)
       navigate(`/toiture/devis/${r.data.data.id}`);
     } catch (error) {
       console.error('Save error:', error);
@@ -517,11 +579,93 @@ export default function EstimatorWizard() {
               </div>
             )}
 
-            {/* ── STEP 2 (MUR/SALLE_BAIN): DETAILS FORM ── */}
-            {currentStep === 2 && (selType === 'mur' || selType === 'salle_bain') && (
+            {/* ── STEP 2 (MUR): NIVEAU D'EAU ── */}
+            {currentStep === 2 && selType === 'mur' && (
+              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Niveau d'eau</h2>
+                <p className="text-neutral-600 font-body mb-8">Quel est le niveau d'eau autour du mur ?</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  {MUR_WATER_LEVELS.map(level => (
+                    <button
+                      key={level.key}
+                      onClick={() => setSelWaterLevel(level.key)}
+                      className={`group bg-white border-2 rounded-2xl p-6 text-left transition-all hover:shadow-sm ${
+                        selWaterLevel === level.key
+                          ? 'border-primary-500 bg-primary-50'
+                          : 'border-neutral-200 hover:border-primary-300'
+                      }`}>
+                      <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">{level.label}</h3>
+                      <p className="text-sm text-neutral-600 font-body">{level.description}</p>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex justify-between">
+                  <button onClick={handlePrev}
+                    className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Précédent
+                  </button>
+                  <button onClick={handleNext} disabled={!canGoNext()}
+                    className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 text-white font-heading font-semibold rounded-lg transition-all disabled:cursor-not-allowed">
+                    Suivant
+                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 2 (SALLE DE BAIN): TYPE DOUCHE ── */}
+            {currentStep === 2 && selType === 'salle_bain' && (
+              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Type de douche</h2>
+                <p className="text-neutral-600 font-body mb-8">Quel type de douche souhaitez-vous étanchéifier ?</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  {SALLE_BAIN_TYPES.map(type => (
+                    <button
+                      key={type.key}
+                      onClick={() => setSelSdbType(type.key)}
+                      className={`group bg-white border-2 rounded-2xl p-6 text-left transition-all hover:shadow-sm ${
+                        selSdbType === type.key
+                          ? 'border-primary-500 bg-primary-50'
+                          : 'border-neutral-200 hover:border-primary-300'
+                      }`}>
+                      <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">{type.label}</h3>
+                      <p className="text-sm text-neutral-600 font-body">{type.description}</p>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex justify-between">
+                  <button onClick={handlePrev}
+                    className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Précédent
+                  </button>
+                  <button onClick={handleNext} disabled={!canGoNext()}
+                    className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 text-white font-heading font-semibold rounded-lg transition-all disabled:cursor-not-allowed">
+                    Suivant
+                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 3 (MUR): DETAILS FORM ── */}
+            {currentStep === 3 && selType === 'mur' && (
               <div className="bg-white border border-neutral-200 rounded-2xl p-8">
                 <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Détails du projet</h2>
-                <p className="text-neutral-600 font-body mb-8">Renseignez les dimensions</p>
+                <p className="text-neutral-600 font-body mb-8">Renseignez les dimensions du mur</p>
 
                 <form onSubmit={handleCalculate} className="space-y-6">
                   {/* Project info */}
@@ -532,7 +676,7 @@ export default function EstimatorWizard() {
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Nom du projet</label>
                         <input type="text" value={info.project_name} onChange={e => setInfo({...info, project_name: e.target.value})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                          placeholder="Ex: Étanchéité mur" />
+                          placeholder="Ex: Étanchéité mur sous-sol" />
                       </div>
                       <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Localisation</label>
@@ -549,7 +693,126 @@ export default function EstimatorWizard() {
                   {/* Dimensions */}
                   <div>
                     <h3 className="font-heading font-semibold text-neutral-800 mb-4">Dimensions</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur totale (m) <span className="text-red-500">*</span></label>
+                        <input type="number" required min="0.1" step="0.01" value={standardData.longueur}
+                          onChange={e => setStandardData({...standardData, longueur: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="0.00" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur enterrée (m) <span className="text-red-500">*</span></label>
+                        <input type="number" required min="0.1" step="0.01" value={standardData.hauteur}
+                          onChange={e => setStandardData({...standardData, hauteur: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="0.00" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Drainage option */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Drainage</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setDrainSelected(false)}
+                        disabled={selWaterLevel === 'nappe'}
+                        className={`group bg-white border-2 rounded-2xl p-4 text-left transition-all hover:shadow-sm ${
+                          !drainSelected && selWaterLevel !== 'nappe'
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-neutral-200 hover:border-primary-300'
+                        } ${selWaterLevel === 'nappe' ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        <h4 className="font-heading font-bold text-base text-neutral-900 mb-1">Non</h4>
+                        <p className="text-sm text-neutral-600 font-body">Sans drainage périphérique</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDrainSelected(true)}
+                        className={`group bg-white border-2 rounded-2xl p-4 text-left transition-all hover:shadow-sm ${
+                          drainSelected || selWaterLevel === 'nappe'
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-neutral-200 hover:border-primary-300'
+                        }`}>
+                        <h4 className="font-heading font-bold text-base text-neutral-900 mb-1">
+                          Oui {selWaterLevel === 'nappe' && <span className="text-xs text-primary-600">(Obligatoire)</span>}
+                        </h4>
+                        <p className="text-sm text-neutral-600 font-body">Avec drain, géotextile et gravier</p>
+                      </button>
+                    </div>
+                    {selWaterLevel === 'nappe' && (
+                      <p className="mt-2 text-sm text-amber-600 font-body flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                        </svg>
+                        Le drainage est obligatoire en présence d'une nappe phréatique
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Notes</label>
+                    <textarea value={info.notes} onChange={e => setInfo({...info, notes: e.target.value})} rows={3}
+                      className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+                      placeholder="Informations complémentaires..." />
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="flex justify-between pt-4">
+                    <button type="button" onClick={handlePrev}
+                      className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Précédent
+                    </button>
+                    <button type="submit" disabled={loading}
+                      className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md">
+                      {loading ? 'Calcul en cours...' : 'Calculer le prix'}
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* ── STEP 3 (SALLE DE BAIN): DETAILS FORM ── */}
+            {currentStep === 3 && selType === 'salle_bain' && (
+              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Détails du projet</h2>
+                <p className="text-neutral-600 font-body mb-8">Renseignez les dimensions de la zone à étanchéifier</p>
+
+                <form onSubmit={handleCalculate} className="space-y-6">
+                  {/* Project info */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Informations du projet</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Nom du projet</label>
+                        <input type="text" value={info.project_name} onChange={e => setInfo({...info, project_name: e.target.value})}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="Ex: Rénovation salle de bain" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Localisation</label>
+                        <CityAutocomplete
+                          value={info.project_location}
+                          onChange={(city) => setInfo({...info, project_location: city})}
+                          placeholder="Ex: Casablanca"
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dimensions */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Dimensions de la zone douche</h3>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur (m) <span className="text-red-500">*</span></label>
                         <input type="number" required min="0.1" step="0.01" value={standardData.longueur}
@@ -564,23 +827,6 @@ export default function EstimatorWizard() {
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                           placeholder="0.00" />
                       </div>
-                      {selType === 'mur' && (
-                        <>
-                          <div>
-                            <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur (m)</label>
-                            <input type="number" min="0.1" step="0.01" value={standardData.hauteur}
-                              onChange={e => setStandardData({...standardData, hauteur: e.target.value})}
-                              className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                              placeholder="0.00" />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Nb. murs</label>
-                            <input type="number" min="1" max="10" value={standardData.nombre_murs}
-                              onChange={e => setStandardData({...standardData, nombre_murs: e.target.value})}
-                              className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" />
-                          </div>
-                        </>
-                      )}
                     </div>
                   </div>
 
@@ -614,7 +860,7 @@ export default function EstimatorWizard() {
             )}
 
             {/* ── SUMMARY STEP ── */}
-            {calculation && ((currentStep === 5 && selType === 'toiture') || (currentStep === 3 && selType !== 'toiture')) && (
+            {calculation && ((currentStep === 5 && selType === 'toiture') || (currentStep === 4 && selType !== 'toiture')) && (
               <div className="space-y-6">
                 {/* Back button to edit */}
                 {/* <div className="bg-white border border-neutral-200 rounded-2xl p-4">
@@ -722,7 +968,7 @@ export default function EstimatorWizard() {
                       if (selType === 'toiture') {
                         setCurrentStep(4); // Go back to details form
                       } else {
-                        setCurrentStep(2); // Go back to details form
+                        setCurrentStep(3); // Go back to details form
                       }
                     }} disabled={loading}
                     className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-heading font-semibold rounded-lg transition-all disabled:opacity-50">
