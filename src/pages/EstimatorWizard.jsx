@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { estimatorAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import Navbar from '../components/layout/Navbar';
+import CityAutocomplete from '../components/common/CityAutocomplete';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -62,7 +63,7 @@ export default function EstimatorWizard() {
   const [toitureData, setToitureData] = useState({
     longueur: '',
     largeur: '',
-    perimetre: '',
+    // perimetre: '',
     hauteur_acrotere: '',
     nombre_evacuations: '1',
     chape_existante: true,
@@ -132,7 +133,7 @@ export default function EstimatorWizard() {
       
       if (selType === 'toiture') {
         // Validate toiture form
-        if (!toitureData.longueur || !toitureData.largeur || !toitureData.perimetre) {
+        if (!toitureData.longueur || !toitureData.largeur) {
           toast.error('Veuillez remplir tous les champs obligatoires');
           return;
         }
@@ -395,9 +396,15 @@ export default function EstimatorWizard() {
                       </div>
                       <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Localisation</label>
-                        <input type="text" value={info.project_location} onChange={e => setInfo({...info, project_location: e.target.value})}
+                        {/* <input type="text" value={info.project_location} onChange={e => setInfo({...info, project_location: e.target.value})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                          placeholder="Ex: Casablanca" />
+                          placeholder="Ex: Casablanca" /> */}
+                          <CityAutocomplete
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                            value={info.project_location}
+                            onChange={(city) => setInfo({...info, project_location: city})}
+                            placeholder="Ex: Casablanca"
+                          />
                       </div>
                     </div>
                   </div>
@@ -420,13 +427,13 @@ export default function EstimatorWizard() {
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                           placeholder="0.00" />
                       </div>
-                      <div>
+                      {/* <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Périmètre (ml) <span className="text-red-500">*</span></label>
                         <input type="number" required min="0.1" step="0.01" value={toitureData.perimetre}
                           onChange={e => setToitureData({...toitureData, perimetre: e.target.value})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                           placeholder="0.00" />
-                      </div>
+                      </div> */}
                       <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur acrotère (m)</label>
                         <input type="number" min="0" step="0.01" value={toitureData.hauteur_acrotere}
@@ -529,9 +536,12 @@ export default function EstimatorWizard() {
                       </div>
                       <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Localisation</label>
-                        <input type="text" value={info.project_location} onChange={e => setInfo({...info, project_location: e.target.value})}
+                        <CityAutocomplete
+                          value={info.project_location}
+                          onChange={(city) => setInfo({...info, project_location: city})}
+                          placeholder="Ex: Casablanca"
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                          placeholder="Ex: Casablanca" />
+                        />
                       </div>
                     </div>
                   </div>
@@ -607,7 +617,7 @@ export default function EstimatorWizard() {
             {calculation && ((currentStep === 5 && selType === 'toiture') || (currentStep === 3 && selType !== 'toiture')) && (
               <div className="space-y-6">
                 {/* Back button to edit */}
-                <div className="bg-white border border-neutral-200 rounded-2xl p-4">
+                {/* <div className="bg-white border border-neutral-200 rounded-2xl p-4">
                   <button
                     onClick={() => {
                       if (selType === 'toiture') {
@@ -622,7 +632,7 @@ export default function EstimatorWizard() {
                     </svg>
                     Modifier les informations
                   </button>
-                </div>
+                </div> */}
 
                 {/* Recap */}
                 <div className="bg-white border border-neutral-200 rounded-2xl p-5">
@@ -682,7 +692,7 @@ export default function EstimatorWizard() {
                             <button
                               type="button"
                               onClick={() => setRemovedMaterials(new Set([...removedMaterials, i]))}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-100 text-neutral-400 hover:text-red-600 transition-all"
+                              className="p-1.5 rounded-lg bg-red-100 text-neutral-400 text-red-600 transition-all"
                               title="Retirer ce produit">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -708,12 +718,18 @@ export default function EstimatorWizard() {
 
                 {/* Save buttons */}
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <button onClick={() => handleSave('draft')} disabled={loading}
+                  <button onClick={() => {
+                      if (selType === 'toiture') {
+                        setCurrentStep(4); // Go back to details form
+                      } else {
+                        setCurrentStep(2); // Go back to details form
+                      }
+                    }} disabled={loading}
                     className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-heading font-semibold rounded-lg transition-all disabled:opacity-50">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Sauvegarder comme brouillon
+                    Modifier les informations
                   </button>
                   <button onClick={() => handleSave('saved')} disabled={loading}
                     className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md">
