@@ -178,8 +178,20 @@ export default function EstimatorWizard() {
       let payload;
       
       if (selType === 'toiture') {
-        // KEEP EXISTING TOITURE LOGIC
-        // ...
+        // Validate toiture form
+        if (!toitureData.longueur || !toitureData.largeur) {
+          toast.error('Veuillez remplir tous les champs obligatoires');
+          return;
+        }
+
+        payload = {
+          type: 'toiture',
+          toiture_type: selToitureType,
+          isolation: selIsolation,
+          finition: selFinition,
+          chape_existante: toitureData.chape_existante,
+          ...toitureData,
+        };
       } else if (selType === 'mur') {
         // NEW: MUR LOGIC
         if (!standardData.longueur || !standardData.hauteur) {
