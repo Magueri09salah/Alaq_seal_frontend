@@ -43,10 +43,22 @@ const TOITURE_FINITIONS = [
 
 // Mur water level options
 const MUR_WATER_LEVELS = [
-  { key: 'humidite', label: 'Humidité du sol', description: 'Sol humide sans pression d\'eau' },
-  { key: 'infiltration', label: 'Infiltration d\'eau occasionnelle', description: 'Eau ponctuelle (pluie, ruissellement)' },
-  { key: 'nappe', label: 'Eau permanente / Nappe phréatique', description: 'Pression d\'eau constante sur le mur' },
-];
+    {
+      key: 'humidite',
+      label: 'Humidité du sol',
+      desc: 'Humidité provenant du sol sans infiltration active d\'eau',
+    },
+    {
+      key: 'infiltration',
+      label: 'Infiltration d\'eau occasionnelle',
+      desc: 'Eau qui s\'infiltre de manière intermittente (pluie, arrosage)',
+    },
+    {
+      key: 'nappe',
+      label: 'Eau permanente / Nappe phréatique',
+      desc: 'Présence constante d\'eau ou contact direct avec la nappe phréatique',
+    },
+  ];
 
 // Salle de bain type options
 const SALLE_BAIN_TYPES = [
@@ -209,23 +221,21 @@ export default function EstimatorWizard() {
         ...toitureData,
       };
     } else if (selType === 'mur') {
-      // MUR LOGIC
       if (!standardData.longueur || !standardData.hauteur) {
-        toast.error('Veuillez remplir tous les champs obligatoires');
-        return;
-      }
-
-      // Force drain=true if nappe phréatique
-      const finalDrain = selWaterLevel === 'nappe' ? true : drainSelected;
-
-      payload = {
-        type: 'mur',
-        water_level: selWaterLevel,
-        drain: finalDrain,
-        longueur: parseFloat(standardData.longueur),
-        hauteur: parseFloat(standardData.hauteur),
-      };
-    } else if (selType === 'salle_bain') {
+          toast.error('Veuillez remplir tous les champs obligatoires');
+          return;
+        }
+        
+        const finalDrain = selWaterLevel === 'nappe' ? true : drainSelected;
+        
+        payload = {
+          type: 'mur',
+          water_level: selWaterLevel,
+          drain: finalDrain,
+          longueur: parseFloat(standardData.longueur),
+          hauteur: parseFloat(standardData.hauteur),
+        };
+      } else if (selType === 'salle_bain') {
       // SALLE DE BAIN LOGIC - FIXED TO HANDLE EMPTY STRINGS
       
       // Validate that required fields are filled
@@ -334,10 +344,10 @@ export default function EstimatorWizard() {
       } else if (selType === 'mur') {
         payload.water_level = selWaterLevel;
         payload.drain = selWaterLevel === 'nappe' ? true : drainSelected;
-        // For mur, we use standardData (longueur and hauteur)
-        payload.longueur = standardData.longueur;
-        payload.hauteur = standardData.hauteur;
-        // Include calculated hauteur_technique if available
+        payload.longueur = parseFloat(standardData.longueur);
+        payload.largeur = parseFloat(standardData.longueur);
+        payload.hauteur = parseFloat(standardData.hauteur);
+        
         if (calculation.hauteur_technique) {
           payload.hauteur_technique = calculation.hauteur_technique;
         }
@@ -700,42 +710,520 @@ export default function EstimatorWizard() {
 
             {/* ── STEP 2 (MUR): NIVEAU D'EAU ── */}
             {currentStep === 2 && selType === 'mur' && (
-              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
-                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Niveau d'eau</h2>
-                <p className="text-neutral-600 font-body mb-8">Quel est le niveau d'eau autour du mur ?</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  {MUR_WATER_LEVELS.map(level => (
-                    <button
-                      key={level.key}
-                      onClick={() => setSelWaterLevel(level.key)}
-                      className={`group bg-white border-2 rounded-2xl p-6 text-left transition-all hover:shadow-sm ${
-                        selWaterLevel === level.key
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-neutral-200 hover:border-primary-300'
-                      }`}>
-                      <h3 className="font-heading font-bold text-lg text-neutral-900 mb-2">{level.label}</h3>
-                      <p className="text-sm text-neutral-600 font-body">{level.description}</p>
-                    </button>
-                  ))}
-                </div>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      Niveau d'humidité / infiltration
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Sélectionnez le type de problème d'eau sur votre mur
+                    </p>
+                    
+                    <div className="grid gap-4">
+                      {MUR_WATER_LEVELS.map((level) => (
+                        <button
+                          key={level.key}
+                          onClick={() => setSelWaterLevel(level.key)}
+                          className={`p-4 rounded-lg border-2 text-left transition-all hover:border-blue-400 ${
+                            selWaterLevel === level.key
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 bg-white'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                selWaterLevel === level.key
+                                  ? 'border-blue-500 bg-blue-500'
+                                  : 'border-gray-300'
+                              }`}
+                            >
+                              {selWaterLevel === level.key && (
+                                <div className="w-2 h-2 bg-white rounded-full" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{level.label}</h4>
+                              <p className="text-sm text-gray-600 mt-1">{level.desc}</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="flex justify-between">
-                  <button onClick={handlePrev}
-                    className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Précédent
-                  </button>
-                  <button onClick={handleNext} disabled={!canGoNext()}
-                    className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 text-white font-heading font-semibold rounded-lg transition-all disabled:cursor-not-allowed">
-                    Suivant
-                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                  <div className="flex justify-between pt-6">
+                    <button
+                      onClick={() => setCurrentStep(1)}
+                      className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      Retour
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!selWaterLevel) {
+                          toast.error('Veuillez sélectionner un niveau d\'eau');
+                          return;
+                        }
+                        setCurrentStep(3);
+                      }}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Suivant
+                    </button>
+                  </div>
                 </div>
+            )}
+
+            
+            {currentStep === 3 && selType === 'mur' && (
+              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
+                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">
+                  Détails du mur
+                </h2>
+                <p className="text-neutral-600 font-body mb-8">
+                  Renseignez les dimensions de votre mur enterré
+                </p>
+
+                <form onSubmit={handleCalculate} className="space-y-6">
+                  {/* Project info */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">
+                      Informations du projet
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">
+                          Nom du projet
+                        </label>
+                        <input
+                          type="text"
+                          value={info.project_name}
+                          onChange={(e) => setInfo({ ...info, project_name: e.target.value })}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="Ex: Rénovation mur villa"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">
+                          Localisation
+                        </label>
+                        <CityAutocomplete
+                          value={info.project_location}
+                          onChange={(city) => setInfo({ ...info, project_location: city })}
+                          placeholder="Ex: Casablanca"
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dimensions */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">
+                      Dimensions du mur
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">
+                          Longueur du mur (m) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="0.1"
+                          step="0.01"
+                          value={standardData.longueur}
+                          onChange={(e) =>
+                            setStandardData({ ...standardData, longueur: e.target.value })
+                          }
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="Ex: 10.00"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">
+                          Hauteur du mur (m) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="0.1"
+                          step="0.01"
+                          value={standardData.hauteur}
+                          onChange={(e) =>
+                            setStandardData({ ...standardData, hauteur: e.target.value })
+                          }
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                          placeholder="Ex: 2.50"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Surface calculation preview */}
+                    {standardData.longueur && standardData.hauteur && (
+                      <div className="mt-4 bg-primary-50 border border-primary-200 rounded-lg p-4">
+                        <p className="text-sm text-neutral-700">
+                          <span className="font-heading font-semibold">Surface estimée:</span>{' '}
+                          {(
+                            parseFloat(standardData.longueur) * parseFloat(standardData.hauteur)
+                          ).toFixed(2)}{' '}
+                          m²
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Drainage option */}
+                  <div>
+                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">
+                      Système de drainage
+                    </h3>
+
+                    {/* Show info if nappe (drainage mandatory) */}
+                    {selWaterLevel === 'nappe' ? (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div className="flex gap-3">
+                          <svg
+                            className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <div>
+                            <p className="font-heading font-semibold text-amber-900">
+                              Drainage obligatoire
+                            </p>
+                            <p className="text-sm text-amber-700 mt-1 font-body">
+                              Pour une nappe phréatique permanente, un système de drainage complet
+                              (drain perforé + gravier + géotextile) est automatiquement inclus dans
+                              le devis.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Show checkbox for other water levels
+                      <div className="border border-neutral-200 rounded-lg p-4">
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={drainSelected}
+                            onChange={(e) => setDrainSelected(e.target.checked)}
+                            className="mt-1 w-5 h-5 text-primary-600 rounded focus:ring-2 focus:ring-primary-500"
+                          />
+                          <div>
+                            <span className="font-heading font-medium text-neutral-900">
+                              Ajouter un système de drainage
+                            </span>
+                            <p className="text-sm text-neutral-600 mt-1 font-body">
+                              Recommandé pour une meilleure évacuation de l'humidité et de l'eau.
+                              Comprend: drain perforé, gravier drainant et géotextile.
+                            </p>
+                          </div>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      value={info.notes}
+                      onChange={(e) => setInfo({ ...info, notes: e.target.value })}
+                      rows={3}
+                      className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+                      placeholder="Informations complémentaires..."
+                    />
+                  </div>
+
+                  {/* Navigation buttons */}
+                  <div className="flex justify-between pt-4">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all"
+                    >
+                      <svg
+                        className="w-5 h-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                      Précédent
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                    >
+                      {loading ? (
+                        <>
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Calcul en cours...
+                        </>
+                      ) : (
+                        <>
+                          Calculer le prix
+                          <svg
+                            className="w-5 h-5 ml-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {currentStep === 4 && selType === 'mur' && calculation && (
+              <div className="space-y-6">
+                {/* Back button to edit */}
+                {/* <div className="bg-white border border-neutral-200 rounded-2xl p-4">
+                  <button
+                    onClick={() => setCurrentStep(3)}
+                    className="inline-flex items-center text-sm font-heading font-medium text-neutral-600 hover:text-primary-600 transition-colors"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                    Modifier les informations
+                  </button>
+                </div> */}
+
+                {/* Recap card */}
+                {/* <div className="bg-white border border-neutral-200 rounded-2xl p-5">
+                  <h3 className="font-heading text-lg font-bold text-neutral-900 mb-4">
+                    Récapitulatif
+                  </h3>
+                  <div className="flex flex-wrap gap-6 text-sm">
+                    <div>
+                      <p className="text-xs text-neutral-500 font-body">Type</p>
+                      <p className="font-heading font-semibold text-neutral-900">
+                        Étanchéité Mur Enterré
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-500 font-body">Niveau d'eau</p>
+                      <p className="font-heading font-semibold text-neutral-900">
+                        {MUR_WATER_LEVELS.find((w) => w.key === selWaterLevel)?.label ||
+                          selWaterLevel}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-500 font-body">Longueur</p>
+                      <p className="font-heading font-semibold text-neutral-900">
+                        {standardData.longueur} m
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-500 font-body">Hauteur</p>
+                      <p className="font-heading font-semibold text-neutral-900">
+                        {standardData.hauteur} m
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-neutral-500 font-body">Surface brute</p>
+                      <p className="font-heading font-semibold text-neutral-900">
+                        {calculation.surface_brute} m²
+                      </p>
+                    </div>
+                    {calculation.hauteur_technique && (
+                      <div>
+                        <p className="text-xs text-neutral-500 font-body">Hauteur technique</p>
+                        <p className="font-heading font-semibold text-neutral-900">
+                          {calculation.hauteur_technique} m
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs text-neutral-500 font-body">Drainage</p>
+                      <p className="font-heading font-semibold text-neutral-900">
+                        {calculation.drain ? 'Oui' : 'Non'}
+                      </p>
+                    </div>
+                    {info.project_location && (
+                      <div>
+                        <p className="text-xs text-neutral-500 font-body">Lieu</p>
+                        <p className="font-heading font-semibold text-neutral-900">
+                          {info.project_location}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div> */}
+
+                {/* Materials list */}
+                {/* {calculation.materials?.length > 0 && (
+                  <div className="bg-white border border-neutral-200 rounded-2xl p-6">
+                    <h2 className="font-heading text-lg font-bold text-neutral-900 mb-4">
+                      Liste des produits
+                    </h2>
+                    <div className="space-y-3">
+                      {calculation.materials
+                        .filter((_, idx) => !removedMaterials.has(idx))
+                        .map((mat, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl group hover:bg-neutral-100 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <span className="w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-xs font-heading font-bold flex-shrink-0">
+                                {i + 1}
+                              </span>
+                              <span className="font-body text-neutral-900 text-sm">
+                                {mat.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-heading font-bold text-primary-500 text-sm">
+                                {mat.quantity} {mat.unit}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setRemovedMaterials(new Set([...removedMaterials, i]))
+                                }
+                                className="p-1.5 rounded-lg bg-red-100 text-red-600 transition-all hover:bg-red-200"
+                                title="Retirer ce produit"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )} */}
+
+                {/* Price card */}
+                {/* <div className="bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-2xl p-6">
+                  <h2 className="font-heading text-xl font-bold mb-6">Estimation</h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between pb-3 border-b border-primary-400">
+                      <span className="font-body">Prix estimé HT</span>
+                      <span className="font-display font-bold">{fmt(calculation.total_ht || 0)}</span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-primary-400">
+                      <span className="font-body">TVA (20%)</span>
+                      <span className="font-display font-bold">
+                        {fmt((calculation.total_ht || 0) * 0.2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-lg">
+                      <span className="font-body font-bold">Total TTC</span>
+                      <span className="font-display font-bold text-2xl">
+                        {fmt((calculation.total_ht || 0) * 1.2)}
+                      </span>
+                    </div>
+                  </div>
+                </div> */}
+
+                {/* Action buttons */}
+                  {/* <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => setCurrentStep(3)}
+                      disabled={loading}
+                      className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-heading font-semibold rounded-lg transition-all disabled:opacity-50"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                      Modifier les informations
+                    </button>
+                    <button
+                      onClick={() => handleSave('saved')}
+                      disabled={loading}
+                      className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Sauvegarder le devis
+                    </button>
+                  </div> */}
               </div>
             )}
 
