@@ -186,123 +186,131 @@ export default function EstimatorWizard() {
   };
 
   const handleCalculate = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
+    
+    let payload;
+    
+    if (selType === 'toiture') {
+      // Validate toiture form
+      if (!toitureData.longueur || !toitureData.largeur) {
+        toast.error('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      payload = {
+        type: 'toiture',
+        toiture_type: selToitureType,
+        isolation: selIsolation,
+        finition: selFinition,
+        chape_existante: toitureData.chape_existante,
+        ...toitureData,
+      };
+    } else if (selType === 'mur') {
+      // MUR LOGIC
+      if (!standardData.longueur || !standardData.hauteur) {
+        toast.error('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      // Force drain=true if nappe phréatique
+      const finalDrain = selWaterLevel === 'nappe' ? true : drainSelected;
+
+      payload = {
+        type: 'mur',
+        water_level: selWaterLevel,
+        drain: finalDrain,
+        longueur: parseFloat(standardData.longueur),
+        hauteur: parseFloat(standardData.hauteur),
+      };
+    } else if (selType === 'salle_bain') {
+      // SALLE DE BAIN LOGIC - FIXED TO HANDLE EMPTY STRINGS
       
-      let payload;
-      
-      if (selType === 'toiture') {
-        // Validate toiture form
-        if (!toitureData.longueur || !toitureData.largeur) {
-          toast.error('Veuillez remplir tous les champs obligatoires');
+      // Validate that required fields are filled
+      if (!sdbData.surface_sol_totale) {
+        toast.error('Veuillez remplir la surface sol totale');
+        return;
+      }
+
+      if (selSdbType === 'avec_bac') {
+        // Validate avec_bac specific fields
+        if (!sdbData.longueur_murs || !sdbData.largeur_murs || !sdbData.hauteur_murs) {
+          toast.error('Veuillez remplir les dimensions des murs');
           return;
         }
-
-        payload = {
-          type: 'toiture',
-          toiture_type: selToitureType,
-          isolation: selIsolation,
-          finition: selFinition,
-          chape_existante: toitureData.chape_existante,
-          ...toitureData,
-        };
-      } else if (selType === 'mur') {
-        // MUR LOGIC
-        if (!standardData.longueur || !standardData.hauteur) {
-          toast.error('Veuillez remplir tous les champs obligatoires');
+      } else if (selSdbType === 'italienne') {
+        // Validate italienne specific fields
+        if (!sdbData.surface_zone_douche) {
+          toast.error('Veuillez remplir la surface de la zone douche');
           return;
         }
+        if (!sdbData.longueur_murs_douche || !sdbData.largeur_murs_douche || !sdbData.hauteur_murs_douche) {
+          toast.error('Veuillez remplir les dimensions des murs de la douche');
+          return;
+        }
+        if (!sdbData.longueur_murs_piece || !sdbData.largeur_murs_piece || !sdbData.hauteur_murs_piece) {
+          toast.error('Veuillez remplir les dimensions des murs de la pièce');
+          return;
+        }
+      }
 
-        // Force drain=true if nappe phréatique
-        const finalDrain = selWaterLevel === 'nappe' ? true : drainSelected;
+      // CRITICAL FIX: Convert empty strings to null and parse numbers
+      // This helper function cleans the data
+      const cleanNumeric = (value) => {
+        if (value === '' || value === null || value === undefined) return undefined;
+        const num = parseFloat(value);
+        return isNaN(num) ? undefined : num;
+      };
 
-        payload = {
-          type: 'mur',
-          water_level: selWaterLevel,
-          drain: finalDrain,
-          longueur: standardData.longueur,
-          hauteur: standardData.hauteur,
-        };
-      } else if (selType === 'salle_bain') {
-        // SALLE DE BAIN LOGIC - FIXED VERSION
-        // This is the critical fix: we need to send sdbData, not standardData!
+      // Build payload with cleaned data - undefined fields won't be sent
+      payload = {
+        type: 'salle_bain',
+        sdb_type: selSdbType,
+        support: sdbData.support,
+        surface_sol_totale: cleanNumeric(sdbData.surface_sol_totale),
         
-        // Validate that required fields are filled
-        if (!sdbData.surface_sol_totale) {
-          toast.error('Veuillez remplir la surface sol totale');
-          return;
-        }
-
-        if (selSdbType === 'avec_bac') {
-          // Validate avec_bac specific fields
-          if (!sdbData.longueur_murs || !sdbData.largeur_murs || !sdbData.hauteur_murs) {
-            toast.error('Veuillez remplir les dimensions des murs');
-            return;
-          }
-        } else if (selSdbType === 'italienne') {
-          // Validate italienne specific fields
-          if (!sdbData.surface_zone_douche) {
-            toast.error('Veuillez remplir la surface de la zone douche');
-            return;
-          }
-          if (!sdbData.longueur_murs_douche || !sdbData.largeur_murs_douche || !sdbData.hauteur_murs_douche) {
-            toast.error('Veuillez remplir les dimensions des murs de la douche');
-            return;
-          }
-          if (!sdbData.longueur_murs_piece || !sdbData.largeur_murs_piece || !sdbData.hauteur_murs_piece) {
-            toast.error('Veuillez remplir les dimensions des murs de la pièce');
-            return;
-          }
-        }
-
-        // Send the complete sdbData to the backend
-        payload = {
-          type: 'salle_bain',
-          sdb_type: selSdbType,
-          support: sdbData.support,
-          surface_sol_totale: sdbData.surface_sol_totale,
-          // Include all fields, backend will use only what it needs based on sdb_type
-          surface_bac: sdbData.surface_bac || null,
-          longueur_murs: sdbData.longueur_murs || null,
-          largeur_murs: sdbData.largeur_murs || null,
-          hauteur_murs: sdbData.hauteur_murs || null,
-          surface_zone_douche: sdbData.surface_zone_douche || null,
-          longueur_murs_douche: sdbData.longueur_murs_douche || null,
-          largeur_murs_douche: sdbData.largeur_murs_douche || null,
-          hauteur_murs_douche: sdbData.hauteur_murs_douche || null,
-          longueur_murs_piece: sdbData.longueur_murs_piece || null,
-          largeur_murs_piece: sdbData.largeur_murs_piece || null,
-          hauteur_murs_piece: sdbData.hauteur_murs_piece || null,
-        };
-      }
-
-      const r = await estimatorAPI.calculateToiture(payload);
-      setCalculation(r.data.data);
-      setRemovedMaterials(new Set());
-      
-      // Navigate to summary
-      if (selType === 'toiture') {
-        setCurrentStep(5);
-      } else if (selType === 'mur' || selType === 'salle_bain') {
-        setCurrentStep(4);
-      }
-      
-    } catch (error) {
-      console.error('Calculate error:', error);
-      
-      // Better error handling to show backend validation errors
-      if (error.response?.data?.errors) {
-        const errorMessages = Object.values(error.response.data.errors).flat();
-        toast.error(errorMessages[0] || 'Erreur lors du calcul');
-      } else {
-        toast.error(error.response?.data?.message || 'Erreur lors du calcul');
-      }
-    } finally {
-      setLoading(false);
+        // These will only be included if they have values (not empty strings)
+        ...(sdbData.surface_bac && { surface_bac: cleanNumeric(sdbData.surface_bac) }),
+        ...(sdbData.longueur_murs && { longueur_murs: cleanNumeric(sdbData.longueur_murs) }),
+        ...(sdbData.largeur_murs && { largeur_murs: cleanNumeric(sdbData.largeur_murs) }),
+        ...(sdbData.hauteur_murs && { hauteur_murs: cleanNumeric(sdbData.hauteur_murs) }),
+        ...(sdbData.surface_zone_douche && { surface_zone_douche: cleanNumeric(sdbData.surface_zone_douche) }),
+        ...(sdbData.longueur_murs_douche && { longueur_murs_douche: cleanNumeric(sdbData.longueur_murs_douche) }),
+        ...(sdbData.largeur_murs_douche && { largeur_murs_douche: cleanNumeric(sdbData.largeur_murs_douche) }),
+        ...(sdbData.hauteur_murs_douche && { hauteur_murs_douche: cleanNumeric(sdbData.hauteur_murs_douche) }),
+        ...(sdbData.longueur_murs_piece && { longueur_murs_piece: cleanNumeric(sdbData.longueur_murs_piece) }),
+        ...(sdbData.largeur_murs_piece && { largeur_murs_piece: cleanNumeric(sdbData.largeur_murs_piece) }),
+        ...(sdbData.hauteur_murs_piece && { hauteur_murs_piece: cleanNumeric(sdbData.hauteur_murs_piece) }),
+      };
     }
-  };
+
+    const r = await estimatorAPI.calculateToiture(payload);
+    setCalculation(r.data.data);
+    setRemovedMaterials(new Set());
+    
+    // Navigate to summary
+    if (selType === 'toiture') {
+      setCurrentStep(5);
+    } else if (selType === 'mur' || selType === 'salle_bain') {
+      setCurrentStep(4);
+    }
+    
+  } catch (error) {
+    console.error('Calculate error:', error);
+    
+    // Better error handling to show backend validation errors
+    if (error.response?.data?.errors) {
+      const errorMessages = Object.values(error.response.data.errors).flat();
+      toast.error(errorMessages[0] || 'Erreur lors du calcul');
+    } else {
+      toast.error(error.response?.data?.message || 'Erreur lors du calcul');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
     const handleSave = async (status) => {
     try {
@@ -981,84 +989,6 @@ export default function EstimatorWizard() {
               </div>
             )}
 
-            {/* ── STEP 3 (SALLE DE BAIN): DETAILS FORM ── */}
-            {currentStep === 4 && selType === 'salle_bain' && (
-              <div className="bg-white border border-neutral-200 rounded-2xl p-8">
-                <h2 className="font-heading text-2xl font-bold text-neutral-900 mb-2">Détails du projet</h2>
-                <p className="text-neutral-600 font-body mb-8">Renseignez les dimensions de la zone à étanchéifier</p>
-
-                <form onSubmit={handleCalculate} className="space-y-6">
-                  {/* Project info */}
-                  <div>
-                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Informations du projet</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Nom du projet</label>
-                        <input type="text" value={info.project_name} onChange={e => setInfo({...info, project_name: e.target.value})}
-                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                          placeholder="Ex: Rénovation salle de bain" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Localisation</label>
-                        <CityAutocomplete
-                          value={info.project_location}
-                          onChange={(city) => setInfo({...info, project_location: city})}
-                          placeholder="Ex: Casablanca"
-                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dimensions */}
-                  <div>
-                    <h3 className="font-heading font-semibold text-neutral-800 mb-4">Dimensions de la zone douche</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur (m) <span className="text-red-500">*</span></label>
-                        <input type="number" required min="0.1" step="0.01" value={standardData.longueur}
-                          onChange={e => setStandardData({...standardData, longueur: e.target.value})}
-                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                          placeholder="0.00" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Largeur (m) <span className="text-red-500">*</span></label>
-                        <input type="number" required min="0.1" step="0.01" value={standardData.largeur}
-                          onChange={e => setStandardData({...standardData, largeur: e.target.value})}
-                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                          placeholder="0.00" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Notes */}
-                  <div>
-                    <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Notes</label>
-                    <textarea value={info.notes} onChange={e => setInfo({...info, notes: e.target.value})} rows={3}
-                      className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
-                      placeholder="Informations complémentaires..." />
-                  </div>
-
-                  {/* Navigation */}
-                  <div className="flex justify-between pt-4">
-                    <button type="button" onClick={handlePrev}
-                      className="inline-flex items-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-50 font-heading font-semibold rounded-lg transition-all">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Précédent
-                    </button>
-                    <button type="submit" disabled={loading}
-                      className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-heading font-semibold rounded-lg transition-all disabled:opacity-50 shadow-sm hover:shadow-md">
-                      {loading ? 'Calcul en cours...' : 'Calculer le prix'}
-                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
 
             {/* ── SUMMARY STEP ── */}
             {calculation && ((currentStep === 5 && selType === 'toiture') || (currentStep === 4 && selType !== 'toiture')) && (
