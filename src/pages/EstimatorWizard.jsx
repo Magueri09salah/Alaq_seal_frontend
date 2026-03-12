@@ -626,8 +626,8 @@ export default function EstimatorWizard() {
                           placeholder="0.00" />
                       </div> */}
                       <div>
-                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur acrotère (m)</label>
-                        <input type="number" min="0" step="0.01" value={toitureData.hauteur_acrotere}
+                        <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur acrotère (m) <span className="text-red-500">*</span> </label>
+                        <input type="number" required min="0" step="0.01" value={toitureData.hauteur_acrotere}
                           onChange={e => setToitureData({...toitureData, hauteur_acrotere: e.target.value})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                           placeholder="0.00" />
