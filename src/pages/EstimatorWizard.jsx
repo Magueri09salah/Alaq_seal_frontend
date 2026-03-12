@@ -1421,7 +1421,7 @@ export default function EstimatorWizard() {
                         </div>
                       </div>
 
-                      <h3 className="font-heading font-semibold text-neutral-800 mt-4 mb-2">Murs du reste de la pièce</h3>
+                      <h3 className="font-heading font-semibold text-neutral-800 mt-4 mb-2">Murs de la pièce</h3>
                       <div className="grid grid-cols-3 gap-4">
                         <div>
                           <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur (ml) <span className="text-red-500">*</span></label>
