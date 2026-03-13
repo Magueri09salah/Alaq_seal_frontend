@@ -92,9 +92,6 @@ export default function EstimatorWizard() {
     support: 'ciment',
     surface_sol_totale: '',
     surface_bac: '',
-    longueur_murs: '',
-    largeur_murs: '',
-    hauteur_murs: '',
     surface_zone_douche: '',
     longueur_murs_douche: '',
     largeur_murs_douche: '',
@@ -116,9 +113,12 @@ export default function EstimatorWizard() {
 
   // Form data for mur/salle_bain
   const [standardData, setStandardData] = useState({
-    longueur: '',
-    largeur: '',
-    hauteur: '',
+    longueur_murs_douche: '',
+    largeur_murs_douche: '',
+    hauteur_murs_douche: '',
+    longueur_murs_piece: '',
+    largeur_murs_piece: '',
+    hauteur_murs_piece: '',
     nombre_murs: 4,
   });
 
@@ -243,25 +243,19 @@ export default function EstimatorWizard() {
         toast.error('Veuillez remplir la surface sol totale');
         return;
       }
-
-      if (selSdbType === 'avec_bac') {
-        // Validate avec_bac specific fields
-        if (!sdbData.longueur_murs || !sdbData.largeur_murs || !sdbData.hauteur_murs) {
+      if (!sdbData.longueur_murs_douche || !sdbData.largeur_murs_douche || !sdbData.hauteur_murs_douche) {
           toast.error('Veuillez remplir les dimensions des murs');
           return;
         }
-      } else if (selSdbType === 'italienne') {
+        if (!sdbData.longueur_murs_piece || !sdbData.largeur_murs_piece || !sdbData.hauteur_murs_piece) {
+          toast.error('Veuillez remplir les dimensions des murs');
+          return;
+        }
+
+      if (selSdbType === 'italienne') {
         // Validate italienne specific fields
         if (!sdbData.surface_zone_douche) {
           toast.error('Veuillez remplir la surface de la zone douche');
-          return;
-        }
-        if (!sdbData.longueur_murs_douche || !sdbData.largeur_murs_douche || !sdbData.hauteur_murs_douche) {
-          toast.error('Veuillez remplir les dimensions des murs de la douche');
-          return;
-        }
-        if (!sdbData.longueur_murs_piece || !sdbData.largeur_murs_piece || !sdbData.hauteur_murs_piece) {
-          toast.error('Veuillez remplir les dimensions des murs de la pièce');
           return;
         }
       }
@@ -283,9 +277,9 @@ export default function EstimatorWizard() {
         
         // These will only be included if they have values (not empty strings)
         ...(sdbData.surface_bac && { surface_bac: cleanNumeric(sdbData.surface_bac) }),
-        ...(sdbData.longueur_murs && { longueur_murs: cleanNumeric(sdbData.longueur_murs) }),
-        ...(sdbData.largeur_murs && { largeur_murs: cleanNumeric(sdbData.largeur_murs) }),
-        ...(sdbData.hauteur_murs && { hauteur_murs: cleanNumeric(sdbData.hauteur_murs) }),
+        // ...(sdbData.longueur_murs && { longueur_murs: cleanNumeric(sdbData.longueur_murs) }),
+        // ...(sdbData.largeur_murs && { largeur_murs: cleanNumeric(sdbData.largeur_murs) }),
+        // ...(sdbData.hauteur_murs && { hauteur_murs: cleanNumeric(sdbData.hauteur_murs) }),
         ...(sdbData.surface_zone_douche && { surface_zone_douche: cleanNumeric(sdbData.surface_zone_douche) }),
         ...(sdbData.longueur_murs_douche && { longueur_murs_douche: cleanNumeric(sdbData.longueur_murs_douche) }),
         ...(sdbData.largeur_murs_douche && { largeur_murs_douche: cleanNumeric(sdbData.largeur_murs_douche) }),
@@ -363,9 +357,9 @@ export default function EstimatorWizard() {
           support: sdbData.support,
           surface_sol_totale: sdbData.surface_sol_totale,
           surface_bac: sdbData.surface_bac || null,
-          longueur_murs: sdbData.longueur_murs || null,
-          largeur_murs: sdbData.largeur_murs || null,
-          hauteur_murs: sdbData.hauteur_murs || null,
+          // longueur_murs: sdbData.longueur_murs || null,
+          // largeur_murs: sdbData.largeur_murs || null,
+          // hauteur_murs: sdbData.hauteur_murs || null,
           surface_zone_douche: sdbData.surface_zone_douche || null,
           longueur_murs_douche: sdbData.longueur_murs_douche || null,
           largeur_murs_douche: sdbData.largeur_murs_douche || null,
@@ -645,14 +639,14 @@ export default function EstimatorWizard() {
                           onChange={e => setToitureData({...toitureData, nombre_evacuations: e.target.value})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" />
                       </div>
-                      <div>
+                      {/* <div>
                         <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Chape de pente existante ?</label>
                         <select value={toitureData.chape_existante} onChange={e => setToitureData({...toitureData, chape_existante: e.target.value === 'true'})}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all">
                           <option value="true">Oui</option>
                           <option value="false">Non</option>
                         </select>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
@@ -1352,23 +1346,47 @@ export default function EstimatorWizard() {
 
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur murs (ml) <span className="text-red-500">*</span></label>
-                          <input type="number" required min="0.1" step="0.01" value={sdbData.longueur_murs}
-                            onChange={e => setSdbData({...sdbData, longueur_murs: e.target.value})}
+                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur murs douche  (ml) <span className="text-red-500">*</span></label>
+                          <input type="number" required min="0.1" step="0.01" value={sdbData.longueur_murs_douche}
+                            onChange={e => setSdbData({...sdbData, longueur_murs_douche: e.target.value})}
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
                         </div>
                         <div>
-                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Largeur murs (ml) <span className="text-red-500">*</span></label>
-                          <input type="number" required min="0.1" step="0.01" value={sdbData.largeur_murs}
-                            onChange={e => setSdbData({...sdbData, largeur_murs: e.target.value})}
+                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Largeur murs douche  (ml) <span className="text-red-500">*</span></label>
+                          <input type="number" required min="0.1" step="0.01" value={sdbData.largeur_murs_douche}
+                            onChange={e => setSdbData({...sdbData, largeur_murs_douche: e.target.value})}
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
                         </div>
                         <div>
-                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur murs (m) <span className="text-red-500">*</span></label>
-                          <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_murs}
-                            onChange={e => setSdbData({...sdbData, hauteur_murs: e.target.value})}
+                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur murs douche  (m) <span className="text-red-500">*</span></label>
+                          <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_murs_douche}
+                            onChange={e => setSdbData({...sdbData, hauteur_murs_douche: e.target.value})}
+                            className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                            placeholder="0.00" />
+                        </div>
+                      </div>
+                      <h3 className="font-heading font-semibold text-neutral-800 mt-4 mb-2">Murs de la pièce</h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Longueur murs pièce (ml) <span className="text-red-500">*</span></label>
+                          <input type="number" required min="0.1" step="0.01" value={sdbData.longueur_murs_piece}
+                            onChange={e => setSdbData({...sdbData, longueur_murs_piece: e.target.value})}
+                            className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                            placeholder="0.00" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Largeur murs pièce (ml) <span className="text-red-500">*</span></label>
+                          <input type="number" required min="0.1" step="0.01" value={sdbData.largeur_murs_piece}
+                            onChange={e => setSdbData({...sdbData, largeur_murs_piece: e.target.value})}
+                            className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                            placeholder="0.00" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur murs pièce  (m) <span className="text-red-500">*</span></label>
+                          <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_murs_piece}
+                            onChange={e => setSdbData({...sdbData, hauteur_murs_piece: e.target.value})}
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
                         </div>
