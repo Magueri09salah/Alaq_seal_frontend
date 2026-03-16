@@ -200,6 +200,10 @@ const ToitureDevisViewPage = () => {
               
               {/* Client Information */}
               <div className="bg-white rounded-2xl border border-neutral-200 p-6">
+                <h1 className="font-heading text-2xl font-bold text-neutral-900 mb-6">
+                  {/* {devis.project_name || 'Devis d\'étanchéité'} */}
+                  <p className="text-2xl font-heading font-bold">{devis.devis_number}</p>
+                </h1>
                 <h2 className="font-heading text-xl font-bold text-neutral-900 mb-6">
                   Informations client
                 </h2>
@@ -386,7 +390,7 @@ const ToitureDevisViewPage = () => {
                 </div>
 
                 {/* Validity */}
-                <div className="mt-6 pt-6 border-t border-neutral-200">
+                {/* <div className="mt-6 pt-6 border-t border-neutral-200">
                   <p className="text-sm text-neutral-600 font-body">
                     Devis valable jusqu'au{' '}
                     <span className="font-semibold text-neutral-900">
@@ -398,7 +402,7 @@ const ToitureDevisViewPage = () => {
                         })}
                     </span>
                   </p>
-                </div>
+                </div> */}
 
                 {/* Technical details */}
                 {devis.type === 'toiture' && (
@@ -507,7 +511,7 @@ const ToitureDevisViewPage = () => {
               )}
 
               {/* Devis number card */}
-              <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
+              {/* <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-6 text-white">
                 <p className="text-sm opacity-90 font-body mb-1">Numéro de devis</p>
                 <p className="text-2xl font-heading font-bold">{devis.devis_number}</p>
                 <p className="text-sm opacity-90 font-body mt-3">
@@ -517,7 +521,7 @@ const ToitureDevisViewPage = () => {
                     year: 'numeric' 
                   })}
                 </p>
-              </div>
+              </div> */}
 
             </div>
           </div>
