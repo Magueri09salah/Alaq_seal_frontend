@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+import PWAUpdatePrompt from './components/PWAUpdatePrompt';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -133,6 +135,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        {/* ✅ PWA COMPONENTS - OUTSIDE OF ROUTES */}
+        <PWAUpdatePrompt />
+        <PWAInstallPrompt />
+        
         <Toaster 
           position="top-right"
           toastOptions={{
