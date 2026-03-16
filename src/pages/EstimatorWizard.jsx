@@ -95,10 +95,10 @@ export default function EstimatorWizard() {
     surface_zone_douche: '',
     longueur_murs_douche: '',
     largeur_murs_douche: '',
-    hauteur_murs_douche: '',
+    hauteur_sdb: '',
     longueur_murs_piece: '',
     largeur_murs_piece: '',
-    hauteur_murs_piece: '',
+    // hauteur_murs_piece: '',
   });
 
   // Form data for toiture
@@ -115,10 +115,10 @@ export default function EstimatorWizard() {
   const [standardData, setStandardData] = useState({
     longueur_murs_douche: '',
     largeur_murs_douche: '',
-    hauteur_murs_douche: '',
+    hauteur_sdb: '',
     longueur_murs_piece: '',
     largeur_murs_piece: '',
-    hauteur_murs_piece: '',
+    // hauteur: '',
     nombre_murs: 4,
   });
 
@@ -243,11 +243,11 @@ export default function EstimatorWizard() {
         toast.error('Veuillez remplir la surface sol totale');
         return;
       }
-      if (!sdbData.longueur_murs_douche || !sdbData.largeur_murs_douche || !sdbData.hauteur_murs_douche) {
+      if (!sdbData.longueur_murs_douche || !sdbData.largeur_murs_douche || !sdbData.hauteur_sdb) {
           toast.error('Veuillez remplir les dimensions des murs');
           return;
         }
-        if (!sdbData.longueur_murs_piece || !sdbData.largeur_murs_piece || !sdbData.hauteur_murs_piece) {
+        if (!sdbData.longueur_murs_piece || !sdbData.largeur_murs_piece || !sdbData.hauteur_sdb) {
           toast.error('Veuillez remplir les dimensions des murs');
           return;
         }
@@ -283,10 +283,10 @@ export default function EstimatorWizard() {
         ...(sdbData.surface_zone_douche && { surface_zone_douche: cleanNumeric(sdbData.surface_zone_douche) }),
         ...(sdbData.longueur_murs_douche && { longueur_murs_douche: cleanNumeric(sdbData.longueur_murs_douche) }),
         ...(sdbData.largeur_murs_douche && { largeur_murs_douche: cleanNumeric(sdbData.largeur_murs_douche) }),
-        ...(sdbData.hauteur_murs_douche && { hauteur_murs_douche: cleanNumeric(sdbData.hauteur_murs_douche) }),
+        ...(sdbData.hauteur_sdb && { hauteur_sdb: cleanNumeric(sdbData.hauteur_sdb) }),
         ...(sdbData.longueur_murs_piece && { longueur_murs_piece: cleanNumeric(sdbData.longueur_murs_piece) }),
         ...(sdbData.largeur_murs_piece && { largeur_murs_piece: cleanNumeric(sdbData.largeur_murs_piece) }),
-        ...(sdbData.hauteur_murs_piece && { hauteur_murs_piece: cleanNumeric(sdbData.hauteur_murs_piece) }),
+        // ...(sdbData.hauteur_murs_piece && { hauteur_murs_piece: cleanNumeric(sdbData.hauteur_murs_piece) }),
       };
     }
 
@@ -363,10 +363,10 @@ export default function EstimatorWizard() {
           surface_zone_douche: sdbData.surface_zone_douche || null,
           longueur_murs_douche: sdbData.longueur_murs_douche || null,
           largeur_murs_douche: sdbData.largeur_murs_douche || null,
-          hauteur_murs_douche: sdbData.hauteur_murs_douche || null,
+          hauteur_sdb: sdbData.hauteur_sdb || null,
           longueur_murs_piece: sdbData.longueur_murs_piece || null,
           largeur_murs_piece: sdbData.largeur_murs_piece || null,
-          hauteur_murs_piece: sdbData.hauteur_murs_piece || null,
+          // hauteur_murs_piece: sdbData.hauteur_murs_piece || null,
         };
         
         // Also include minimal longueur/largeur for compatibility with existing schema
@@ -1360,9 +1360,9 @@ export default function EstimatorWizard() {
                             placeholder="0.00" />
                         </div>
                         <div>
-                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur murs douche  (m) <span className="text-red-500">*</span></label>
-                          <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_murs_douche}
-                            onChange={e => setSdbData({...sdbData, hauteur_murs_douche: e.target.value})}
+                          <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur  (m) <span className="text-red-500">*</span></label>
+                          <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_sdb}
+                            onChange={e => setSdbData({...sdbData, hauteur_sdb: e.target.value})}
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
                         </div>
@@ -1383,13 +1383,13 @@ export default function EstimatorWizard() {
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
                         </div>
-                        <div>
+                        {/* <div>
                           <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur murs pièce  (m) <span className="text-red-500">*</span></label>
                           <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_murs_piece}
                             onChange={e => setSdbData({...sdbData, hauteur_murs_piece: e.target.value})}
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
-                        </div>
+                        </div> */}
                       </div>
                     </>
                   )}
@@ -1432,8 +1432,8 @@ export default function EstimatorWizard() {
                         </div>
                         <div>
                           <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur (m) <span className="text-red-500">*</span></label>
-                          <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_murs_douche}
-                            onChange={e => setSdbData({...sdbData, hauteur_murs_douche: e.target.value})}
+                          <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_sdb}
+                            onChange={e => setSdbData({...sdbData, hauteur_sdb: e.target.value})}
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
                         </div>
@@ -1455,13 +1455,13 @@ export default function EstimatorWizard() {
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
                         </div>
-                        <div>
+                        {/* <div>
                           <label className="block text-sm font-heading font-medium text-neutral-700 mb-2">Hauteur (m) <span className="text-red-500">*</span></label>
                           <input type="number" required min="0.1" step="0.01" value={sdbData.hauteur_murs_piece}
                             onChange={e => setSdbData({...sdbData, hauteur_murs_piece: e.target.value})}
                             className="w-full px-4 py-3 border border-neutral-300 rounded-lg font-body focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                             placeholder="0.00" />
-                        </div>
+                        </div> */}
                       </div>
                     </>
                   )}
