@@ -5,13 +5,12 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt';
 
 // Pages
-import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GoogleCallbackPage from './pages/Googlecallbackpage';
 import DashboardPage from './pages/DashboardPage';
 import EstimatorWizard from './pages/EstimatorWizard';
-import DevisViewPage from './pages/DevisViewPage';
+// import DevisViewPage from './pages/DevisViewPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ToitureDevisViewPage from './pages/ToitureDevisViewPage';
@@ -50,8 +49,15 @@ const AuthRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<LandingPage />} />
+      {/* Root redirects to login (or dashboard if already logged in) */}
+      <Route
+        path="/"
+        element={
+          <AuthRoute>
+            <LoginPage />
+          </AuthRoute>
+        }
+      />
 
       {/* Auth Routes (redirect to dashboard if logged in) */}
       <Route
@@ -106,14 +112,14 @@ function AppRoutes() {
       />
 
       {/* OLD SYSTEM - View Devis */}
-      <Route
+      {/* <Route
         path="/devis/:id"
         element={
           <ProtectedRoute>
             <DevisViewPage />
           </ProtectedRoute>
         }
-      />
+      /> */}
 
       {/* NEW SYSTEM - View Toiture Devis */}
       <Route
